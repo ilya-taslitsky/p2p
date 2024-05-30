@@ -46,6 +46,7 @@ dependencies {
 }
 
 tasks.named('jar') {
+    enabled = false
     archiveFileName = 'p2p-bot.jar'
     manifest {
         attributes(
@@ -61,12 +62,6 @@ tasks.named('jar') {
 tasks.named('test') {
     useJUnitPlatform()
 }
-
-
-bootJar {
-    enabled = true
-}
-
 
 
 //plugins {
