@@ -1,1 +1,1 @@
-web: java -jar p2p-bot.jar
+web: java -jar build/libs/kp2p-bot.jar
