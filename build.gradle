@@ -3,9 +3,6 @@ plugins {
     id 'org.springframework.boot' version '2.6.1'
     id 'io.spring.dependency-management' version '1.1.4'
 
-    id "com.moowork.node" version "1.3.1"
-
-
 }
 sourceCompatibility = '17'
 targetCompatibility = '17'
@@ -16,9 +13,7 @@ version = '0.0.1-SNAPSHOT'
 java {
     sourceCompatibility = '17'
 }
-node {
-    download = true
-}
+
 
 configurations {
     compileOnly {
@@ -36,6 +31,11 @@ tasks.named('jar') {
         attributes(
                 'Main-Class': 'com.example.bybitp2p.Bybitp2pApplication'
         )
+    }
+    from { configurations.runtimeClasspath.collect {it.isDirectory() ? it : zipTree(it)}}
+    setDuplicatesStrategy(DuplicatesStrategy.EXCLUDE)
+    into 'resources', {
+        from 'resources'
     }
 }
 
@@ -62,6 +62,12 @@ dependencies {
 tasks.named('test') {
     useJUnitPlatform()
 }
+
+
+bootJar {
+    enabled = true
+}
+
 
 
 //plugins {
