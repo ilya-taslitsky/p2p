@@ -7,7 +7,6 @@ import bot.data.exchangedata.bybit.Currency;
 import bot.service.BybitService;
 import bot.service.OkxService;
 import bot.service.P2PService;
-import com.example.bybitp2p.data.*;
 import bot.data.P2PRequest;
 import bot.service.ClientService;
 
