@@ -1,0 +1,1 @@
+web: java -jar p2p-bot.jar
