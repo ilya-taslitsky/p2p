@@ -1,0 +1,34 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Resources:
+  MySpringBootApplication:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: com.example.bybitp2p.controller.LambdaHandler::handleRequest
+      Runtime: java17
+      CodeUri: build/libs/p2p-bot.jar
+      MemorySize: 512
+      Timeout: 30
+      Role: arn:aws:iam::471112715872:role/LambdaExecutionRole
+      Events:
+        ProxyApi:
+          Type: Api
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
+
+  ClientTable:
+    Type: 'AWS::DynamoDB::Table'
+    Properties:
+      TableName: Client
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+
+
