@@ -52,10 +52,7 @@ tasks.named('jar') {
                 'Main-Class': 'com.example.bybitp2p.Bybitp2pApplication'
         )
     }
-    from {
-        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
-    }
-    setDuplicatesStrategy(DuplicatesStrategy.EXCLUDE)
+//k
 }
 
 tasks.named('test') {
