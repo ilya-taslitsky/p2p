@@ -46,7 +46,6 @@ dependencies {
 }
 
 tasks.named('jar') {
-    enabled = false
     archiveFileName = 'p2p-bot.jar'
     manifest {
         attributes(
