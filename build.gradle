@@ -58,6 +58,8 @@ tasks.named('jar') {
     setDuplicatesStrategy(DuplicatesStrategy.EXCLUDE)
 }
 
+tasks.register('stage') { dependsOn['clean', 'installDist'] }
+
 tasks.named('test') {
     useJUnitPlatform()
 }
