@@ -25,6 +25,10 @@ tasks.named('jar') {
                 'Main-Class': 'com.example.bybitp2p.Bybitp2pApplication'
         )
     }
+    from {
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    with jar
 }
 
 dependencies {
