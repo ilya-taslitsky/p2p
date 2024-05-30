@@ -28,7 +28,9 @@ tasks.named('jar') {
     from {
         configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
     }
-    with jar
+    into 'resources', {
+        from 'resources'
+    }
 }
 
 dependencies {
