@@ -14,23 +14,14 @@ java {
     sourceCompatibility = '17'
 }
 
-repositories {
-    mavenCentral()
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
 }
 
-tasks.named('jar') {
-    archiveFileName = 'p2p-bot.jar'
-    manifest {
-        attributes(
-                'Main-Class': 'com.example.bybitp2p.Bybitp2pApplication'
-        )
-    }
-    from {
-        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
-    }
-    into 'resources', {
-        from 'resources'
-    }
+repositories {
+    mavenCentral()
 }
 
 
@@ -52,6 +43,18 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('jar') {
+    archiveFileName = 'p2p-bot.jar'
+    manifest {
+        attributes(
+                'Main-Class': 'com.example.bybitp2p.Bybitp2pApplication'
+        )
+    }
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
 }
 
 tasks.named('test') {
