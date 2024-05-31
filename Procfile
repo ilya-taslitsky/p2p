@@ -1,1 +1,1 @@
-web: ./gradlew bootJar
+web: ./gradlew bootJar && java -jar build/libs/p2p-bot.jar
