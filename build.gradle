@@ -58,18 +58,15 @@ tasks.named('jar') {
     setDuplicatesStrategy(DuplicatesStrategy.EXCLUDE)
 }
 
-tasks.register('stage') { dependsOn['clean', 'installDist'] }
 
 tasks.named('test') {
     useJUnitPlatform()
 }
 
-
 //plugins {
 //    id 'java'
 //    id 'org.springframework.boot' version '2.6.1'
 //    id 'io.spring.dependency-management' version '1.1.4'
-//    id 'com.github.johnrengelman.shadow' version '7.1.1'
 //}
 //
 //group = 'com.example'
@@ -87,60 +84,29 @@ tasks.named('test') {
 //
 //repositories {
 //    mavenCentral()
-//    maven { url "https://repository.michael-simons.eu/repository/maven-public/" }
 //}
 //
 //dependencies {
-//    implementation 'org.springframework.cloud:spring-cloud-function-adapter-aws:3.2.1'
-//    implementation 'org.springframework.cloud:spring-cloud-starter-function-web:3.2.1'
-//    implementation 'com.amazonaws:aws-java-sdk-dynamodb:1.12.118'
-//    implementation 'com.amazonaws:aws-lambda-java-core:1.2.1'
-//    implementation 'io.github.boostchicken:spring-data-dynamodb:5.2.5'
 //
-//
+//    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 //    implementation 'org.springframework.boot:spring-boot-starter-web'
-//    implementation 'org.springframework.boot:spring-boot-starter-logging'
 //    implementation 'org.springframework.boot:spring-boot-starter-aop'
 //    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 //    implementation 'org.telegram:telegrambots-spring-boot-starter:6.7.0'
 //    implementation 'org.telegram:telegrambots-abilities:6.7.0'
 //
+//    implementation 'com.zaxxer:HikariCP:4.0.3'
+//    implementation 'org.postgresql:postgresql:42.3.8'
 //
 //    compileOnly 'org.projectlombok:lombok'
 //    annotationProcessor 'org.projectlombok:lombok'
 //    testImplementation 'org.springframework.boot:spring-boot-starter-test'
 //    implementation 'org.springframework.boot:spring-boot-starter-webflux'
 //    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-////    configurations.configureEach {
-////        exclude group: 'ch.qos.logback', module: 'logback-classic'
-////    }
 //}
 //
-//
-//tasks.named('jar') {
-//    archiveFileName = 'p2p-bot.jar'
-//    manifest {
-//        attributes(
-//                'Main-Class': 'com.example.bybitp2p.Bybitp2pApplication'
-//        )
-//    }
+//tasks.named('test') {
+//    useJUnitPlatform()
 //}
-//
-//bootJar {
-//    enabled = false
-//}
-//
-//jar {
-//    enabled = true
-//}
-//
-//shadowJar {
-//    archiveFileName = 'p2p-bot.jar'
-//    archiveClassifier.set('')
-//    mergeServiceFiles()
-//    manifest {
-//        attributes(
-//                'Main-Class': 'com.example.bybitp2p.Bybitp2pApplication'
-//        )
-//    }
-//}
+
+
