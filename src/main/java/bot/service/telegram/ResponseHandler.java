@@ -2,7 +2,11 @@ package bot.service.telegram;
 
 import bot.data.telegram.UserState;
 import bot.data.telegram.Constants;
-import org.telegram.abilitybots.api.db.DBContext;
+import bot.service.ClientService;
+import bot.service.P2PScheduler;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import org.springframework.stereotype.Component;
 import org.telegram.abilitybots.api.sender.SilentSender;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -16,15 +20,15 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 
+@Component
+@Setter
+@RequiredArgsConstructor
 public class ResponseHandler {
-    private static final String PASS = "fwefwe3423r23waefdwqw!c";
-    private final SilentSender sender;
-    private final Map<Long, UserState> chatStates;
-
-    public ResponseHandler(SilentSender sender, DBContext db) {
-        this.sender = sender;
-        chatStates = db.getMap(Constants.CHAT_STATES);
-    }
+    private String passwordHash = "fwefwe3423r23waefdwqw!c";
+    private SilentSender sender;
+    private Map<Long, UserState> chatStates;
+    private final ClientService clientService;
+    private final P2PScheduler p2PScheduler;
 
     public void replyToStart(long chatId) {
         SendMessage message = new SendMessage();
@@ -34,36 +38,37 @@ public class ResponseHandler {
         chatStates.put(chatId, UserState.NOT_AUTHENTICATED);
     }
 
-    public void replyToPass(long chatId, Message message) {
-        String password = message.getText();
+    public void replyToMessage(long chatId, Message message) {
+        String messageText = message.getText();
         UserState userState = chatStates.get(chatId);
-        if (userState != null && userState.equals(UserState.AUTHENTICATED)) {
-            SendMessage sendMessage = new SendMessage();
-            sendMessage.setChatId(chatId);
-            sendMessage.setText("Жека, долбаеб, ты уже сука аунтефицированный, не пиши сюда нихуя!");
-            sender.execute(sendMessage);
-        } else if (password.equals(PASS)) {
-            chatStates.put(chatId, UserState.AUTHENTICATED);
-            SendMessage sendMessage = new SendMessage();
-            sendMessage.setChatId(chatId);
-            sendMessage.setText("Your are authenticated.");
-            sender.execute(sendMessage);
-        } else {
-            chatStates.put(chatId, UserState.NOT_AUTHENTICATED);
-            SendMessage sendMessage = new SendMessage();
-            sendMessage.setChatId(chatId);
-            sendMessage.setText("Your are not authenticated");
-            sender.execute(sendMessage);
+        switch (userState) {
+            case DELETE_ID -> {
+                if (clientService.deleteById(messageText)) {
+                    promptWithKeyboardForState(chatId, "Deleted", getButtons());
+                } else {
+                    promptWithKeyboardForState(chatId, "ID not found", getButtons());
+                }
+                chatStates.put(chatId, UserState.AUTHENTICATED);
+            }
+            case NOT_AUTHENTICATED -> {
+                if (messageText.equals(passwordHash)) {
+                    promptWithKeyboardForState(chatId, "You are authenticated", getButtons());
+                    chatStates.put(chatId, UserState.AUTHENTICATED);
+                } else {
+                    sendMessage(chatId, "You are not authenticated");
+                }
+            }
+            case AUTHENTICATED -> {
+                reactToButtons(chatId, messageText);
+            }
         }
     }
-    public boolean sendMessage(String text) {
+
+    public boolean sendOrders(String text) {
         AtomicBoolean isSent = new AtomicBoolean(true);
         chatStates.forEach((chatId, state) -> {
             if (state.equals(UserState.AUTHENTICATED)) {
-                SendMessage sendMessage = new SendMessage();
-                sendMessage.setChatId(chatId);
-                sendMessage.setText(text);
-                Optional<Message> execute = sender.execute(sendMessage);
+                Optional<Message> execute = sendMessage(chatId, text);
                 if (execute.isEmpty()) {
                     isSent.set(false);
                 }
@@ -72,37 +77,44 @@ public class ResponseHandler {
         return isSent.get();
     }
 
-    private void promptWithKeyboardForState(long chatId, String text, ReplyKeyboard YesOrNo, UserState awaitingReorder) {
+    private void reactToButtons(long chatId, String buttonText) {
+        switch (buttonText) {
+            case Constants.DELETE_BY_ID -> {
+                sendMessage(chatId, "Enter id to delete");
+                chatStates.put(chatId, UserState.DELETE_ID);
+            }
+            case Constants.BOT_BOT_STATUS -> {
+                String message = p2PScheduler.isStarted() ? "Bot is started" : "Bot is stopped";
+                sendMessage(chatId, message + "\nStatus: " + p2PScheduler.getLastRequest());
+            }
+            default -> sendMessage(chatId, "Unknown command");
+        }
+    }
+
+    private void promptWithKeyboardForState(long chatId, String text, ReplyKeyboard keyboard) {
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(chatId);
         sendMessage.setText(text);
-        sendMessage.setReplyMarkup(YesOrNo);
+        sendMessage.setReplyMarkup(keyboard);
         sender.execute(sendMessage);
-        chatStates.put(chatId, awaitingReorder);
     }
 
-    private ReplyKeyboard getStartOrStop(){
+    private Optional<Message> sendMessage(long chatId, String text) {
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.setChatId(chatId);
+        sendMessage.setText(text);
+        return sender.execute(sendMessage);
+    }
+
+    private ReplyKeyboard getButtons(){
         KeyboardRow row = new KeyboardRow();
-        row.add("Start");
-        row.add("Stop");
+        row.add(Constants.DELETE_BY_ID);
+        row.add(Constants.BOT_BOT_STATUS);
         return new ReplyKeyboardMarkup(List.of(row));
     }
 
-    private ReplyKeyboard getStart(){
-        KeyboardRow row = new KeyboardRow();
-        row.add("Start");
-        return new ReplyKeyboardMarkup(List.of(row));
-    }
-
-    private ReplyKeyboard getStop(){
-        KeyboardRow row = new KeyboardRow();
-        row.add("Stop");
-        return new ReplyKeyboardMarkup(List.of(row));
-    }
 
     public boolean userIsActive(Long chatId) {
         return chatStates.containsKey(chatId);
     }
-
-
 }

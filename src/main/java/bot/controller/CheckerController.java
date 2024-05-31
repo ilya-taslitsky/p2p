@@ -19,7 +19,7 @@ public class CheckerController {
     @PostMapping
     public ResponseEntity<String> start(@RequestBody FilterRequest filterRequest) {
         log.info("/checker start: {}", filterRequest);
-        p2PScheduler.start(mapper.mapToP2PRequest(filterRequest), mapper.mapToFilter(filterRequest));
+        p2PScheduler.start(filterRequest);
         return ResponseEntity.ok("Checker started");
     }
 

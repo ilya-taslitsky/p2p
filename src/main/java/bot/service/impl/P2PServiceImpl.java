@@ -41,13 +41,13 @@ public class P2PServiceImpl implements P2PService {
         List<String> foundUrls = new ArrayList<>();
         for (bot.data.exchangedata.bybit.Currency currency : Currency.values()) {
             request.setCurrencyId(currency.name());
-                foundUrls.addAll(bybitService.getAvailableOrderUrls(request, filter, foundUserIds));
+            foundUrls.addAll(bybitService.getAvailableOrderUrls(request, filter, foundUserIds));
 //            foundUrls.addAll(okxService.getAvailableOrderUrls(request, filter, foundUserIds));
         }
         foundUrls.forEach(url -> foundOrderUrls.append(url).append("\n\n"));
         if (!foundOrderUrls.isEmpty()) {
             log.info("Sending urls:\n" + foundOrderUrls);
-            boolean isSent = appContext.getResponseHandler().sendMessage(foundOrderUrls.toString());
+            boolean isSent = appContext.getResponseHandler().sendOrders(foundOrderUrls.toString());
             if (isSent) {
                 log.info("Orders are sent. Clear cache");
                 urlCache = new StringBuilder();

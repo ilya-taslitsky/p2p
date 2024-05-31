@@ -4,11 +4,13 @@ import bot.data.entity.Client;
 import bot.dao.ClientRepository;
 import bot.service.ClientService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -26,8 +28,14 @@ public class ClientServiceImpl implements ClientService {
     }
 
     @Override
-    public void deleteById(String userId) {
-
+    @Transactional
+    public boolean deleteById(String id) {
+        Optional<Client> clientOptional = clientDao.findById(id);
+        if (clientOptional.isEmpty()) {
+            return false;
+        }
+        clientDao.delete(clientOptional.get());
+        return true;
     }
 
     @Override

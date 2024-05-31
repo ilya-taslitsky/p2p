@@ -6,4 +6,6 @@ public class Constants {
 
     public static final String CHAT_STATES = "chatStates";
     public static final String START_TEXT = "Prove that you are Zheka. Enter password";
+    public static final String BOT_BOT_STATUS = "Get bot status";
+    public static final String DELETE_BY_ID = "Delete id";
 }

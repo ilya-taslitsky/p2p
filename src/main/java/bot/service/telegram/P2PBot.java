@@ -12,6 +12,7 @@ import org.telegram.abilitybots.api.objects.Flag;
 import org.telegram.abilitybots.api.objects.Privacy;
 import org.telegram.abilitybots.api.objects.Reply;
 import org.telegram.telegrambots.meta.api.objects.Update;
+
 import java.util.function.BiConsumer;
 
 import static org.telegram.abilitybots.api.objects.Locality.USER;
@@ -20,15 +21,17 @@ import static org.telegram.abilitybots.api.util.AbilityUtils.getChatId;
 
 @Component("p2pBot")
 public class P2PBot extends AbilityBot {
-    private final ResponseHandler responseHandler;
+    private ResponseHandler responseHandler;
     private AppContext appContext;
     @Autowired
     public P2PBot(@Value("${telegram.bot.token}") String botToken, @Value("${telegram.bot.name}") String botName,
-                 AppContext appContext) {
+                 AppContext appContext, ResponseHandler responseHandler) {
         super(botToken, botName);
         this.appContext = appContext;
-        this.responseHandler = new ResponseHandler(silent, db);
+        this.responseHandler = responseHandler;
         appContext.setResponseHandler(responseHandler);
+        responseHandler.setSender(silent);
+        responseHandler.setChatStates(db.getMap(Constants.CHAT_STATES));
     }
 
     public Ability startBot() {
@@ -42,8 +45,9 @@ public class P2PBot extends AbilityBot {
                 .build();
     }
 
+
     public Reply replyToButtons() {
-        BiConsumer<BaseAbilityBot, Update> action = (abilityBot, upd) -> responseHandler.replyToPass(getChatId(upd), upd.getMessage());
+        BiConsumer<BaseAbilityBot, Update> action = (abilityBot, upd) -> responseHandler.replyToMessage(getChatId(upd), upd.getMessage());
         return Reply.of(action, Flag.TEXT, upd -> responseHandler.userIsActive(getChatId(upd)));
     }
 
@@ -51,4 +55,5 @@ public class P2PBot extends AbilityBot {
     public long creatorId() {
         return 1L;
     }
+
 }
