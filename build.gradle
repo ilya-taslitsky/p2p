@@ -57,6 +57,10 @@ tasks.named('bootJar') {
     enabled = true
 }
 
+bootRun {
+    systemProperty 'spring.config.name', 'application'
+}
+
 //plugins {
 //    id 'java'
 //    id 'org.springframework.boot' version '2.6.1'
