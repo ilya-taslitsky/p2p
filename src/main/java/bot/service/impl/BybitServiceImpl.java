@@ -1,7 +1,6 @@
 package bot.service.impl;
 
 import bot.data.exchangedata.bybit.Item;
-import bot.service.BybitService;
 import bot.dao.BybitClient;
 import bot.data.Filter;
 import bot.data.Links;
@@ -10,19 +9,34 @@ import bot.data.P2PResponse;
 import bot.service.ExchangeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.util.*;
 
-@Component
+@Service(value = "BYBIT")
 @Slf4j
 @RequiredArgsConstructor
-public class BybitServiceImpl extends ExchangeService implements BybitService {
-    private String baseUrl = Links.BYBIT_GET_ORDERS_URL;
+public class BybitServiceImpl implements ExchangeService {
     private final BybitClient bybitClient;
 
     @Override
-    public List<String> getAvailableOrderUrls(P2PRequest request, Filter filter, Set<String> foundUserIds) {
+    public List<P2PResponse> processResponses(List<P2PResponse> items, Filter filter) {
+        double lastQuantity = filter.getLastQuantity() == null ? 0 : filter.getLastQuantity();
+        return items.stream()
+                .filter(item -> item.getAuthStatus() == 2
+                        && item.getPremium().equals("0")
+                        && item.getCompleteOrderRate() == 0
+                        && item.getPayments().size() <= filter.getPaymentsCount()
+                        && item.getPayments().contains("Wise")
+                        && item.getCompletedOrderQuantity() <= filter.getRecentOrderNum()
+                        && item.getMaxCompletedOrderQuantity() == 0
+                        && item.getMaxAmount() <= filter.getMaxAmount()
+                        && item.getLastQuantity() >= lastQuantity)
+                .toList();
+    }
+
+    @Override
+    public List<String> getAvailableOrderUrls(P2PRequest request, Filter filter, Set<String> userIdCache,  List<String> foundUserIds) {
         List<P2PResponse> responses = new ArrayList<>();
         List<String> foundOrderUrls = new ArrayList<>();
         List<Item> items;
@@ -38,9 +52,11 @@ public class BybitServiceImpl extends ExchangeService implements BybitService {
             page++;
         } while (!Objects.requireNonNull(items).isEmpty());
         List<P2PResponse> processResponses = processResponses(responses, filter);
+
         processResponses.stream()
-                .filter(item -> !foundUserIds.contains(item.getUserId()))
+                .filter(item -> !userIdCache.contains(item.getUserId()))
                 .forEach(item -> {
+                    userIdCache.add(item.getUserId());
                     foundUserIds.add(item.getUserId());
                     foundOrderUrls.add(String.format(Links.BYBIT_MERCHANT_URL, item.getUserId(), request.getCurrencyId()));
                 });

@@ -4,14 +4,13 @@ import bot.data.AppContext;
 import bot.data.Filter;
 import bot.data.entity.Client;
 import bot.data.exchangedata.bybit.Currency;
-import bot.service.BybitService;
-import bot.service.OkxService;
+import bot.service.ExchangeService;
+import bot.service.ExchangeSubscriberService;
 import bot.service.P2PService;
 import bot.data.P2PRequest;
 import bot.service.ClientService;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,10 +24,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class P2PServiceImpl implements P2PService {
-    private final BybitService bybitService;
-    private final OkxService okxService;
+    private final ExchangeSubscriberService exchangeSubscriberService;
     private final ClientService clientService;
-    private final Set<String> foundUserIds = new HashSet<>();
+    private final Set<String> userIdCache = new HashSet<>();
     private List<Client> clients;
     private final AppContext appContext;
     private StringBuilder urlCache = new StringBuilder();
@@ -38,19 +36,31 @@ public class P2PServiceImpl implements P2PService {
     @Async
     public void parseOrders(P2PRequest request, Filter filter) {
         StringBuilder foundOrderUrls = new StringBuilder(urlCache);
-        List<String> foundUrls = new ArrayList<>();
-        for (bot.data.exchangedata.bybit.Currency currency : Currency.values()) {
+        List<String> foundOrderIds = new ArrayList<>();
+        List<String> newFoundOrderUrls = new ArrayList<>();
+
+        Collection<ExchangeService> exchangeServices = exchangeSubscriberService.getAllSubscribers();
+
+        for (Currency currency : Currency.values()) {
             request.setCurrencyId(currency.name());
-            foundUrls.addAll(bybitService.getAvailableOrderUrls(request, filter, foundUserIds));
-         //   foundUrls.addAll(okxService.getAvailableOrderUrls(request, filter, foundUserIds));
+            for(ExchangeService exchangeService : exchangeServices) {
+                List<String> availableOrderUrls = exchangeService.getAvailableOrderUrls(request, filter, userIdCache, foundOrderIds);
+                newFoundOrderUrls.addAll(availableOrderUrls);
+            }
         }
-        foundUrls.forEach(url -> foundOrderUrls.append(url).append("\n\n"));
+
+        // create a string with all found urls
+        newFoundOrderUrls.forEach(url -> foundOrderUrls.append(url).append("\n\n"));
+
         if (!foundOrderUrls.isEmpty()) {
             log.info("Sending urls:\n" + foundOrderUrls);
+
+            foundOrderUrls.append(urlCache.toString());
             boolean isSent = appContext.getResponseHandler().sendOrders(foundOrderUrls.toString());
             if (isSent) {
                 log.info("Orders are sent. Clear cache");
                 urlCache = new StringBuilder();
+                persistNewClients(foundOrderIds);
             } else {
                 log.warn("Order are not sent. Add to cache");
                 urlCache.append(foundOrderUrls);
@@ -62,20 +72,17 @@ public class P2PServiceImpl implements P2PService {
     @PostConstruct
     public void init() {
         List<Client> clients = clientService.findAll();
-        clients.forEach(client -> foundUserIds.add(client.getId()));
+        clients.forEach(client -> userIdCache.add(client.getId()));
         this.clients = clients;
-        log.info("Populating foundUserIds from DB: " + foundUserIds);
+        log.info("Populating foundUserIds from DB: " + userIdCache);
     }
 
-    @PreDestroy
-    public void destroy() {
-        Set<String> clientIds = clients.stream().map(Client::getId).collect(Collectors.toSet());
-        foundUserIds.removeAll(clientIds);
-
+    private void persistNewClients(List<String> foundUserIds) {
         List<Client> newClients = foundUserIds.stream().map(Client::new).toList();
+        clients.addAll(newClients);
 
         // save to db
-        log.info("Saving new clients to db: " + clientIds);
+        log.info("Saving new clients to db: " + foundUserIds);
         clientService.saveAll(newClients);
     }
 }
