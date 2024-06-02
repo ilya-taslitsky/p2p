@@ -50,7 +50,7 @@ public class BotController {
     public ResponseEntity<String> getBotStatus() {
         log.info("Triggered endpoint /bot get bot status");
         String message = p2PScheduler.isStarted() ? "Bot is started" : "Bot is stopped";
-        message += "\nStatus: " + p2PScheduler.getLastRequest();
+        message += "\nStatus: " + p2PScheduler.getLastRequest() + "\nExhanges:" + exchangeSubscriberService.getAllExchanges();
         return ResponseEntity.ok(message);
     }
 }

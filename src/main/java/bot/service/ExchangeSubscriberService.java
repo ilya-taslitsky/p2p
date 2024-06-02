@@ -9,4 +9,5 @@ public interface ExchangeSubscriberService {
     void subscribe(Exchange exchange);
     void unsubscribe(Exchange exchange);
     Collection<ExchangeService> getAllSubscribers();
+    Collection<Exchange> getAllExchanges();
 }

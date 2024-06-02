@@ -50,6 +50,11 @@ public class ExchangeSubscriberServiceImpl implements ExchangeSubscriberService,
     }
 
     @Override
+    public Collection<Exchange> getAllExchanges() {
+        return exchangeServices.keySet();
+    }
+
+    @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         this.applicationContext = applicationContext;
     }
