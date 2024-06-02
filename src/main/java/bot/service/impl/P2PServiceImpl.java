@@ -42,7 +42,7 @@ public class P2PServiceImpl implements P2PService {
         for (bot.data.exchangedata.bybit.Currency currency : Currency.values()) {
             request.setCurrencyId(currency.name());
             foundUrls.addAll(bybitService.getAvailableOrderUrls(request, filter, foundUserIds));
-//            foundUrls.addAll(okxService.getAvailableOrderUrls(request, filter, foundUserIds));
+         //   foundUrls.addAll(okxService.getAvailableOrderUrls(request, filter, foundUserIds));
         }
         foundUrls.forEach(url -> foundOrderUrls.append(url).append("\n\n"));
         if (!foundOrderUrls.isEmpty()) {
