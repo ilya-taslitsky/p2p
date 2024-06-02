@@ -45,4 +45,12 @@ public class BotController {
         exchangeSubscriberService.unsubscribe(Exchange.fromString(exchange));
         return ResponseEntity.ok("Exchange removed");
     }
+
+    @GetMapping
+    public ResponseEntity<String> getBotStatus() {
+        log.info("Triggered endpoint /bot get bot status");
+        String message = p2PScheduler.isStarted() ? "Bot is started" : "Bot is stopped";
+        message += "\nStatus: " + p2PScheduler.getLastRequest();
+        return ResponseEntity.ok(message);
+    }
 }
