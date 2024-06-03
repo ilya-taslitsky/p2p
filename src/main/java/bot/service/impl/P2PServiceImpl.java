@@ -4,6 +4,7 @@ import bot.data.AppContext;
 import bot.data.Filter;
 import bot.data.entity.Client;
 import bot.data.exchangedata.bybit.Currency;
+import bot.exception.NotFoundException;
 import bot.service.ExchangeService;
 import bot.service.ExchangeSubscriberService;
 import bot.service.P2PService;
@@ -18,7 +19,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -27,7 +27,6 @@ public class P2PServiceImpl implements P2PService {
     private final ExchangeSubscriberService exchangeSubscriberService;
     private final ClientService clientService;
     private final Set<String> userIdCache = new HashSet<>();
-    private List<Client> clients;
     private final AppContext appContext;
     private StringBuilder urlCache = new StringBuilder();
 
@@ -73,16 +72,24 @@ public class P2PServiceImpl implements P2PService {
     public void init() {
         List<Client> clients = clientService.findAll();
         clients.forEach(client -> userIdCache.add(client.getId()));
-        this.clients = clients;
         log.info("Populating foundUserIds from DB: " + userIdCache);
     }
 
     private void persistNewClients(List<String> foundUserIds) {
         List<Client> newClients = foundUserIds.stream().map(Client::new).toList();
-        clients.addAll(newClients);
 
         // save to db
         log.info("Saving new clients to db: " + foundUserIds);
         clientService.saveAll(newClients);
+    }
+
+    public void deleteById(String id) {
+        userIdCache.remove(id);
+        boolean isDeleted = clientService.deleteById(id);
+        if (!isDeleted) {
+            log.warn("Client not found by ID: {}", id);
+            throw new NotFoundException("Client not found by ID: " + id);
+        }
+        log.info("Client deleted");
     }
 }

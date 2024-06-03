@@ -16,7 +16,7 @@ import java.util.*;
 @Service(value = "BYBIT")
 @Slf4j
 @RequiredArgsConstructor
-public class BybitServiceImpl implements ExchangeService {
+public class BybitService implements ExchangeService {
     private final BybitClient bybitClient;
 
     @Override

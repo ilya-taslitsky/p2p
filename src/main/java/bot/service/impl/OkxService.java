@@ -21,7 +21,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 @Component
 @Slf4j
-public class OkxServiceImpl implements ExchangeService {
+public class OkxService implements ExchangeService {
     private String baseUrl = Links.OKX_GET_ORDERS_URL;
     private final OkxClient okxClient;
     private final Mapper mapper;

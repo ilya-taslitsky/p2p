@@ -6,6 +6,8 @@ import bot.service.ClientService;
 import bot.service.P2PScheduler;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.telegram.abilitybots.api.sender.SilentSender;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -14,6 +16,8 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -23,11 +27,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Component
 @Setter
 @RequiredArgsConstructor
+@Slf4j
 public class ResponseHandler {
-    private String passwordHash = "fwefwe3423r23waefdwqw!c";
+    @Value("${telegram.password.hash}")
+    private String passwordHash;
     private SilentSender sender;
     private Map<Long, UserState> chatStates;
-    private final ClientService clientService;
     private final P2PScheduler p2PScheduler;
 
     public void replyToStart(long chatId) {
@@ -42,16 +47,9 @@ public class ResponseHandler {
         String messageText = message.getText();
         UserState userState = chatStates.get(chatId);
         switch (userState) {
-            case DELETE_ID -> {
-                if (clientService.deleteById(messageText)) {
-                    promptWithKeyboardForState(chatId, "Deleted", getButtons());
-                } else {
-                    promptWithKeyboardForState(chatId, "ID not found", getButtons());
-                }
-                chatStates.put(chatId, UserState.AUTHENTICATED);
-            }
             case NOT_AUTHENTICATED -> {
-                if (messageText.equals(passwordHash)) {
+                String userPassHash = getPasswordHash(messageText);
+                if (passwordHash.equals(userPassHash)) {
                     promptWithKeyboardForState(chatId, "You are authenticated", getButtons());
                     chatStates.put(chatId, UserState.AUTHENTICATED);
                 } else {
@@ -79,10 +77,6 @@ public class ResponseHandler {
 
     private void reactToButtons(long chatId, String buttonText) {
         switch (buttonText) {
-            case Constants.DELETE_BY_ID -> {
-                sendMessage(chatId, "Enter id to delete");
-                chatStates.put(chatId, UserState.DELETE_ID);
-            }
             case Constants.BOT_BOT_STATUS -> {
                 String message = p2PScheduler.isStarted() ? "Bot is started" : "Bot is stopped";
                 sendMessage(chatId, message + "\nStatus: " + p2PScheduler.getLastRequest());
@@ -108,7 +102,6 @@ public class ResponseHandler {
 
     private ReplyKeyboard getButtons(){
         KeyboardRow row = new KeyboardRow();
-        row.add(Constants.DELETE_BY_ID);
         row.add(Constants.BOT_BOT_STATUS);
         return new ReplyKeyboardMarkup(List.of(row));
     }
@@ -116,5 +109,20 @@ public class ResponseHandler {
 
     public boolean userIsActive(Long chatId) {
         return chatStates.containsKey(chatId);
+    }
+
+    private String getPasswordHash(String input) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(input.getBytes());
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hash) {
+                hexString.append(String.format("%02x", b));
+            }
+            return hexString.toString();
+        } catch (NoSuchAlgorithmException e) {
+           log.error("Failed to hash password" + e.getMessage());
+        }
+        return null;
     }
 }
