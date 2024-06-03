@@ -1,11 +1,8 @@
 package bot.data.entity;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 
-//import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
-//import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
+import bot.data.Exchange;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,21 +15,7 @@ import lombok.NoArgsConstructor;
 public class Client {
     @Id
     private String id;
+    @Enumerated(value = EnumType.STRING)
+    private Exchange exchange;
 }
-
-//@DynamoDBTable(tableName = "Client")
-//@AllArgsConstructor
-//@NoArgsConstructor
-//public class Client {
-//    @Id
-//    private String id;
-//    @DynamoDBHashKey(attributeName = "id")
-//    public String getId() {
-//        return id;
-//    }
-//
-//    public void setId(String id) {
-//        this.id = id;
-//    }
-//}
 

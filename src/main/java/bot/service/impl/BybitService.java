@@ -1,12 +1,10 @@
 package bot.service.impl;
 
+import bot.data.*;
 import bot.data.exchangedata.bybit.Item;
 import bot.dao.BybitClient;
-import bot.data.Filter;
-import bot.data.Links;
-import bot.data.P2PRequest;
-import bot.data.P2PResponse;
 import bot.service.ExchangeService;
+import com.google.common.collect.Multimap;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -36,7 +34,7 @@ public class BybitService implements ExchangeService {
     }
 
     @Override
-    public List<String> getAvailableOrderUrls(P2PRequest request, Filter filter, Set<String> userIdCache,  List<String> foundUserIds) {
+    public List<String> getAvailableOrderUrls(P2PRequest request, Filter filter, Multimap<Exchange, String> userIdCache,  Multimap<Exchange, String> foundUserIds) {
         List<P2PResponse> responses = new ArrayList<>();
         List<String> foundOrderUrls = new ArrayList<>();
         List<Item> items;
@@ -45,7 +43,7 @@ public class BybitService implements ExchangeService {
             request.setPage(String.valueOf(page));
             items = bybitClient.findOrdersWithFilter(request);
             if(items == null) {
-                log.warn("Failed to send request");
+                log.warn("Failed to send bybit request");
                 continue;
             }
             responses.addAll(items);
@@ -54,10 +52,10 @@ public class BybitService implements ExchangeService {
         List<P2PResponse> processResponses = processResponses(responses, filter);
 
         processResponses.stream()
-                .filter(item -> !userIdCache.contains(item.getUserId()))
+                .filter(item -> !userIdCache.containsEntry(Exchange.BYBIT, item.getUserId()))
                 .forEach(item -> {
-                    userIdCache.add(item.getUserId());
-                    foundUserIds.add(item.getUserId());
+                    userIdCache.put(Exchange.BYBIT, item.getUserId());
+                    foundUserIds.put(Exchange.BYBIT, item.getUserId());
                     foundOrderUrls.add(String.format(Links.BYBIT_MERCHANT_URL, item.getUserId(), request.getCurrencyId()));
                 });
         return foundOrderUrls;

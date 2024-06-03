@@ -1,18 +1,18 @@
 package bot.service.impl;
 
-import bot.data.AppContext;
-import bot.data.Filter;
+import bot.data.*;
+import bot.data.Currency;
 import bot.data.entity.Client;
-import bot.data.exchangedata.bybit.Currency;
 import bot.exception.NotFoundException;
 import bot.service.ExchangeService;
 import bot.service.ExchangeSubscriberService;
 import bot.service.P2PService;
-import bot.data.P2PRequest;
 import bot.service.ClientService;
 
 import javax.annotation.PostConstruct;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -26,7 +26,7 @@ import java.util.*;
 public class P2PServiceImpl implements P2PService {
     private final ExchangeSubscriberService exchangeSubscriberService;
     private final ClientService clientService;
-    private final Set<String> userIdCache = new HashSet<>();
+    private final Multimap<Exchange, String> userIdCache = ArrayListMultimap.create();
     private final AppContext appContext;
     private StringBuilder urlCache = new StringBuilder();
 
@@ -35,7 +35,7 @@ public class P2PServiceImpl implements P2PService {
     @Async
     public void parseOrders(P2PRequest request, Filter filter) {
         StringBuilder foundOrderUrls = new StringBuilder(urlCache);
-        List<String> foundOrderIds = new ArrayList<>();
+        Multimap<Exchange, String> foundOrderIds = ArrayListMultimap.create();
         List<String> newFoundOrderUrls = new ArrayList<>();
 
         Collection<ExchangeService> exchangeServices = exchangeSubscriberService.getAllSubscribers();
@@ -71,21 +71,27 @@ public class P2PServiceImpl implements P2PService {
     @PostConstruct
     public void init() {
         List<Client> clients = clientService.findAll();
-        clients.forEach(client -> userIdCache.add(client.getId()));
+        clients.forEach(client -> userIdCache.put(client.getExchange(), client.getId()));
         log.info("Populating foundUserIds from DB: " + userIdCache);
     }
 
-    private void persistNewClients(List<String> foundUserIds) {
-        List<Client> newClients = foundUserIds.stream().map(Client::new).toList();
+    private void persistNewClients(Multimap<Exchange, String> foundUserIds) {
+        List<Client> newClients = new ArrayList<>();
+
+        for (Exchange exchange : foundUserIds.keySet()) {
+            for (String id : foundUserIds.get(exchange)) {
+                newClients.add(new Client(id, exchange));
+            }
+        }
 
         // save to db
         log.info("Saving new clients to db: " + foundUserIds);
         clientService.saveAll(newClients);
     }
 
-    public void deleteById(String id) {
-        userIdCache.remove(id);
-        boolean isDeleted = clientService.deleteById(id);
+    public void deleteByExchangeAndId(Exchange exchange, String id) {
+        userIdCache.remove(exchange, id);
+        boolean isDeleted = clientService.deleteByExchangeAndId(exchange, id);
         if (!isDeleted) {
             log.warn("Client not found by ID: {}", id);
             throw new NotFoundException("Client not found by ID: " + id);

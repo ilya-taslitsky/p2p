@@ -3,8 +3,8 @@ package bot.controller;
 import bot.data.Exchange;
 import bot.data.FilterRequest;
 import bot.service.ExchangeSubscriberService;
-import bot.service.Mapper;
 import bot.service.P2PScheduler;
+import bot.service.impl.ClientServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 public class BotController {
     private final P2PScheduler p2PScheduler;
     private final ExchangeSubscriberService exchangeSubscriberService;
+    private final ClientServiceImpl clientService;
 
     @PostMapping
     public ResponseEntity<String> start(@RequestBody FilterRequest filterRequest) {
@@ -52,5 +53,11 @@ public class BotController {
         String message = p2PScheduler.isStarted() ? "Bot is started" : "Bot is stopped";
         message += "\nStatus: " + p2PScheduler.getLastRequest() + "\nExhanges:" + exchangeSubscriberService.getAllExchanges();
         return ResponseEntity.ok(message);
+    }
+
+    @GetMapping("/test")
+    public ResponseEntity<String> test() {
+        clientService.test();
+        return ResponseEntity.ok("Test");
     }
 }

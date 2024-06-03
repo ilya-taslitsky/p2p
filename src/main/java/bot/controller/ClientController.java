@@ -1,7 +1,6 @@
 package bot.controller;
 
-import bot.exception.NotFoundException;
-import bot.service.ClientService;
+import bot.data.Exchange;
 import bot.service.P2PService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,10 +16,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/clients")
 public class ClientController {
     private final P2PService p2PService;
-    @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteClient(@PathVariable String id) {
+    @DeleteMapping("/{exchange}/{id}")
+    public ResponseEntity<String> deleteClient(@PathVariable Exchange exchange, @PathVariable String id) {
         log.info("Triggered endpoint /clients/{}", id);
-        p2PService.deleteById(id);
+        p2PService.deleteByExchangeAndId(exchange, id);
         return ResponseEntity.ok("Client deleted");
     }
 }

@@ -1,40 +1,31 @@
 package bot.service.impl;
 
+import bot.dao.HuobiClient;
 import bot.data.*;
-import bot.data.exchangedata.okx.OkxRequest;
-import bot.dao.OkxClient;
+import bot.data.exchangedata.huobi.Data;
 import bot.service.ExchangeService;
-import bot.service.Mapper;
 import com.google.common.collect.Multimap;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
+import java.util.Objects;
 
-@Service(value = "OKX")
+@Service(value = "HUOBI")
 @RequiredArgsConstructor
-@Component
 @Slf4j
-public class OkxService implements ExchangeService {
-    private String baseUrl = Links.OKX_GET_ORDERS_URL;
-    private final OkxClient okxClient;
-    private final Mapper mapper;
-
+public class HuobiService implements ExchangeService {
+    private final HuobiClient huobiClient;
+    private String baseUrl = Links.HUOBI_GET_ORDERS_URL;
     @Override
     public List<P2PResponse> processResponses(List<P2PResponse> items, Filter filter) {
         double lastQuantity = filter.getLastQuantity() == null ? 0 : filter.getLastQuantity();
         return items.stream()
-                .filter(item -> item.getAuthStatus() == 2
-                        && item.getPremium().equals("0")
-                        && item.getCompleteOrderRate() == 0
+                .filter(item -> item.getAuthStatus() == 0
                         && item.getPayments().size() <= filter.getPaymentsCount()
-                        && item.getPayments().contains("Wise")
                         && item.getCompletedOrderQuantity() <= filter.getRecentOrderNum()
-                        && item.getMaxCompletedOrderQuantity() == 0
                         && item.getMaxAmount() <= filter.getMaxAmount()
                         && item.getLastQuantity() >= lastQuantity)
                 .toList();
@@ -42,17 +33,29 @@ public class OkxService implements ExchangeService {
 
     @Override
     public List<String> getAvailableOrderUrls(P2PRequest request, Filter filter, Multimap<Exchange, String> userIdCache, Multimap<Exchange, String> foundUserIds) {
+        List<P2PResponse> responses = new ArrayList<>();
         List<String> foundOrderUrls = new ArrayList<>();
-        OkxRequest okxRequest = mapper.mapToOkxRequest(request);
-        String urlWithParams = String.format(baseUrl, okxRequest.getCryptoCurrency(), okxRequest.getCurrency(), okxRequest.getTimestamp());
-        List<P2PResponse> responses = new ArrayList<>(okxClient.findOrdersWithFilter(urlWithParams));
+        List<Data> items;
+        int page = 1;
+        do {
+            int huobiValue = Currency.fromString(request.getCurrencyId()).getHuobiValue();
+            String urlWithParams = String.format(baseUrl, huobiValue, page);
+            items = huobiClient.findOrdersWithFilter(urlWithParams);
+            if(items == null) {
+                log.warn("Failed to send request");
+                continue;
+            }
+            responses.addAll(items);
+            page++;
+        } while (!Objects.requireNonNull(items).isEmpty());
         List<P2PResponse> processResponses = processResponses(responses, filter);
+
         processResponses.stream()
-                .filter(item -> !userIdCache.containsEntry(Exchange.OKX, item.getUserId()))
+                .filter(item -> !userIdCache.containsEntry(Exchange.HUOBI, item.getUserId()))
                 .forEach(item -> {
-                    userIdCache.put(Exchange.OKX,item.getUserId());
-                    foundUserIds.put(Exchange.OKX, item.getUserId());
-                    foundOrderUrls.add(String.format(Links.OKX_MERCHANT_URL, item.getUserId()));
+                    userIdCache.put(Exchange.HUOBI, item.getUserId());
+                    foundUserIds.put(Exchange.HUOBI, item.getUserId());
+                    foundOrderUrls.add(String.format(Links.HUOBI_MERCHANT_URL, item.getUserId()));
                 });
         return foundOrderUrls;
     }
