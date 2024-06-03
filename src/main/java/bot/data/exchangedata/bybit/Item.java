@@ -21,8 +21,6 @@ public class Item implements P2PResponse  {
     private List<String> payments; // 78
     private int recentOrderNum; // < 100
     private TradingPreferenceSet tradingPreferenceSet;
-    private String maxAmount;
-    private String minAmount;
     private int authStatus; // should be 2
     // Getters and setters
 
@@ -105,12 +103,6 @@ public class Item implements P2PResponse  {
     public int getCompletedOrderQuantity() {
         return recentOrderNum;
     }
-
-    @Override
-    public Double getMaxAmount() {
-       return maxAmount == null ? 0 : Double.parseDouble(maxAmount);
-    }
-
     @Override
     public int getAuthStatus() {
         return authStatus;

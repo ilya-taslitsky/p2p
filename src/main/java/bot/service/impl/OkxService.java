@@ -35,7 +35,7 @@ public class OkxService implements ExchangeService {
                         && item.getPayments().contains("Wise")
                         && item.getCompletedOrderQuantity() <= filter.getRecentOrderNum()
                         && item.getMaxCompletedOrderQuantity() == 0
-                        && item.getMaxAmount() <= filter.getMaxAmount()
+                        && item.getLastQuantity() <= filter.getMaxAmount()
                         && item.getLastQuantity() >= lastQuantity)
                 .toList();
     }

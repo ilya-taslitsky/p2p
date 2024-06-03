@@ -10,7 +10,6 @@ import java.util.List;
  public class Data implements P2PResponse {
     private long uid;
     private int merchantLevel; // should be 0
-    private String maxTradeLimit;
     private String tradeCount;
     private List<PayMethod> payMethods;
     private int totalTradeOrderCount; // must be less than 100
@@ -68,11 +67,6 @@ import java.util.List;
    @Override
    public int getCompletedOrderQuantity() {
       return totalTradeOrderCount;
-   }
-
-   @Override
-   public Double getMaxAmount() {
-      return Double.valueOf(maxTradeLimit);
    }
 
    @Override

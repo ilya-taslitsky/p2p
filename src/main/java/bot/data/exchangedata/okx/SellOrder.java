@@ -11,7 +11,6 @@ public class SellOrder implements P2PResponse {
     private String creatorType; // should be "common"
     private int maxCompletedOrderQuantity; // should be 0
     private long maxUserCreatedDate; // in timestamp. current date.after
-    private int minCompletedOrderQuantity; // should be 0
     private int completedOrderQuantity; // less < 100
     private int minKycLevel; // 1??
     private List<String> paymentMethods; // paymentMethod
@@ -78,11 +77,6 @@ public class SellOrder implements P2PResponse {
     @Override
     public int getCompletedOrderQuantity() {
         return completedOrderQuantity;
-    }
-
-    @Override
-    public Double getMaxAmount() {
-        return Double.valueOf(quoteMaxAmountPerOrder);
     }
 
     @Override

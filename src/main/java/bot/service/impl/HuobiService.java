@@ -26,7 +26,7 @@ public class HuobiService implements ExchangeService {
                 .filter(item -> item.getAuthStatus() == 0
                         && item.getPayments().size() <= filter.getPaymentsCount()
                         && item.getCompletedOrderQuantity() <= filter.getRecentOrderNum()
-                        && item.getMaxAmount() <= filter.getMaxAmount()
+                        && item.getLastQuantity() <= filter.getMaxAmount()
                         && item.getLastQuantity() >= lastQuantity)
                 .toList();
     }

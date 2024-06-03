@@ -24,7 +24,5 @@ public interface P2PResponse {
 
     int getCompletedOrderQuantity();
 
-    Double getMaxAmount(); // 3000
-
     int getAuthStatus();
 }
