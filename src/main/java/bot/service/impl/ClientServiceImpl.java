@@ -50,9 +50,8 @@ public class ClientServiceImpl implements ClientService {
 
     @Override
     public List<Client> findAll() {
-        List<Client> clients = new ArrayList<>();
-        clientDao.findAll().forEach(clients::add);
-        return clients;
+        log.info("Find all clients");
+        return clientDao.findAll();
     }
 
     public void test() {
