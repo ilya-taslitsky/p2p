@@ -23,6 +23,13 @@ public class ClientController {
         return ResponseEntity.ok("Client deleted");
     }
 
+    @DeleteMapping
+    public ResponseEntity<String> deleteAllClients() {
+        log.info("Triggered endpoint delete all clients");
+        p2PService.deleteAll();
+        return ResponseEntity.ok("Clients deleted");
+    }
+
     @GetMapping
     public ResponseEntity<ClientListDto> getAllClients() {
         log.info("Triggered endpoint /clients");

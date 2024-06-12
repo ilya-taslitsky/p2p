@@ -98,4 +98,11 @@ public class P2PServiceImpl implements P2PService {
         }
         log.info("Client deleted");
     }
+
+    @Override
+    public void deleteAll() {
+        userIdCache.clear();
+        clientService.deleteAll();
+        log.info("All clients deleted");
+    }
 }

@@ -7,4 +7,5 @@ import bot.data.Filter;
 public interface P2PService {
      void parseOrders(P2PRequest order, Filter filter);
      void deleteByExchangeAndId(Exchange exchange, String id);
+     void deleteAll();
 }

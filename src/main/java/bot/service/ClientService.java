@@ -11,4 +11,5 @@ public interface ClientService {
     boolean deleteByExchangeAndId(Exchange exchange, String id);
     Client findById(String id);
     List<Client> findAll();
+    void deleteAll();
 }

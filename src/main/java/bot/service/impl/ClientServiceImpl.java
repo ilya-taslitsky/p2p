@@ -54,6 +54,14 @@ public class ClientServiceImpl implements ClientService {
         return clientDao.findAll();
     }
 
+    @Override
+    @Transactional
+    @Modifying
+    public void deleteAll() {
+        log.info("Delete all clients");
+        clientDao.deleteAll();
+    }
+
     public void test() {
         Iterable<Client> all = clientDao.findAll();
         all.forEach(client -> client.setExchange(Exchange.BYBIT));

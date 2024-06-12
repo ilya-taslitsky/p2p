@@ -22,7 +22,6 @@ public class BybitService implements ExchangeService {
         double lastQuantity = filter.getLastQuantity() == null ? 0 : filter.getLastQuantity();
         return items.stream()
                 .filter(item -> item.getAuthStatus() == 2
-                        && item.getPremium().equals("0")
                         && item.getCompleteOrderRate() == 0
                         && item.getPayments().size() <= filter.getPaymentsCount()
                         && item.getPayments().contains("Wise")
