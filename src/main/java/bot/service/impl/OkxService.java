@@ -11,9 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Service(value = "OKX")
 @RequiredArgsConstructor
@@ -41,8 +39,8 @@ public class OkxService implements ExchangeService {
     }
 
     @Override
-    public List<String> getAvailableOrderUrls(P2PRequest request, Filter filter, Multimap<Exchange, String> userIdCache, Multimap<Exchange, String> foundUserIds) {
-        List<String> foundOrderUrls = new ArrayList<>();
+    public Map<String, String> getAvailableOrderUrls(P2PRequest request, Filter filter, Multimap<Exchange, String> userIdCache, Multimap<Exchange, String> foundUserIds) {
+        Map<String, String> foundOrderUrls = new HashMap<>();
         OkxRequest okxRequest = mapper.mapToOkxRequest(request);
         String urlWithParams = String.format(baseUrl, okxRequest.getCryptoCurrency(), okxRequest.getCurrency(), okxRequest.getTimestamp());
         List<P2PResponse> responses = new ArrayList<>(okxClient.findOrdersWithFilter(urlWithParams));
@@ -52,7 +50,7 @@ public class OkxService implements ExchangeService {
                 .forEach(item -> {
                     userIdCache.put(Exchange.OKX,item.getUserId());
                     foundUserIds.put(Exchange.OKX, item.getUserId());
-                    foundOrderUrls.add(String.format(Links.OKX_MERCHANT_URL, item.getUserId()));
+                    foundOrderUrls.put(String.format(Links.OKX_MERCHANT_URL, item.getUserId()), item.getUserId());
                 });
         return foundOrderUrls;
     }

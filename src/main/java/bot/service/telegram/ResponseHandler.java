@@ -1,8 +1,10 @@
 package bot.service.telegram;
 
+import bot.data.Exchange;
 import bot.data.telegram.UserState;
 import bot.data.telegram.Constants;
 import bot.service.ClientService;
+import bot.service.ExchangeSubscriberService;
 import bot.service.P2PScheduler;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -18,6 +20,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -34,6 +37,7 @@ public class ResponseHandler {
     private SilentSender sender;
     private Map<Long, UserState> chatStates;
     private final P2PScheduler p2PScheduler;
+    private final ExchangeSubscriberService exchangeSubscriberService;
 
     public void replyToStart(long chatId) {
         SendMessage message = new SendMessage();
@@ -56,7 +60,30 @@ public class ResponseHandler {
                     sendMessage(chatId, "You are not authenticated");
                 }
             }
-            case AUTHENTICATED -> {
+            case ADD_EXCHANGE -> {
+                if (messageText.equals("Exit")) {
+                    promptWithKeyboardForState(chatId, "Exited", getButtons());
+                    chatStates.put(chatId, UserState.AUTHENTICATED);
+                    return;
+                }
+                Exchange exchange = Exchange.fromString(messageText);
+                exchangeSubscriberService.subscribe(exchange);
+                promptWithKeyboardForState(chatId, "Exchange added", getButtons());
+                chatStates.put(chatId, UserState.AUTHENTICATED);
+            }
+            case REMOVE_EXCHANGE -> {
+                if (messageText.equals("Exit")) {
+                    promptWithKeyboardForState(chatId, "Exited", getButtons());
+                    chatStates.put(chatId, UserState.AUTHENTICATED);
+                    return;
+                }
+                Exchange exchange = Exchange.fromString(messageText);
+                exchangeSubscriberService.unsubscribe(exchange);
+                promptWithKeyboardForState(chatId, "Exchange removed", getButtons());
+                chatStates.put(chatId, UserState.AUTHENTICATED);
+
+            }
+            case AUTHENTICATED ->  {
                 reactToButtons(chatId, messageText);
             }
         }
@@ -79,10 +106,44 @@ public class ResponseHandler {
         switch (buttonText) {
             case Constants.BOT_BOT_STATUS -> {
                 String message = p2PScheduler.isStarted() ? "Bot is started" : "Bot is stopped";
-                sendMessage(chatId, message + "\nStatus: " + p2PScheduler.getLastRequest());
+                sendMessage(chatId, message + "\nStatus: " + p2PScheduler.getLastRequest() + "\n" + exchangeSubscriberService.getAllExchanges());
+            }
+            case Constants.START_BOT -> {
+                p2PScheduler.start();
+                sendMessage(chatId, "Bot started");
+            }
+            case Constants.STOP_BOT -> {
+                p2PScheduler.stop();
+                sendMessage(chatId, "Bot stopped");
+            }
+            case Constants.ADD_EXCHANGE -> {
+                chatStates.put(chatId, UserState.ADD_EXCHANGE);
+                promptWithKeyboardForState(chatId, "Select exchange to add", getExchanges(true));
+
+            }
+            case Constants.REMOVE_EXCHANGE -> {
+                chatStates.put(chatId, UserState.REMOVE_EXCHANGE);
+                promptWithKeyboardForState(chatId, "Select exchange to remove", getExchanges(false));
             }
             default -> sendMessage(chatId, "Unknown command");
         }
+    }
+
+    private ReplyKeyboard getExchanges(boolean isAdd) {
+        KeyboardRow row = new KeyboardRow();
+        Collection<Exchange> selectedExchanges = exchangeSubscriberService.getAllExchanges();
+        if (!isAdd) {
+            selectedExchanges.stream().map(Enum::name).forEach(row::add);
+        } else {
+            // add all exchanges that are not in selectedExchanges
+            for (Exchange exchange : Exchange.values()) {
+                if (!selectedExchanges.contains(exchange)) {
+                    row.add(exchange.name());
+                }
+            }
+        }
+        row.add("Exit");
+        return new ReplyKeyboardMarkup(List.of(row));
     }
 
     private void promptWithKeyboardForState(long chatId, String text, ReplyKeyboard keyboard) {
@@ -103,6 +164,10 @@ public class ResponseHandler {
     private ReplyKeyboard getButtons(){
         KeyboardRow row = new KeyboardRow();
         row.add(Constants.BOT_BOT_STATUS);
+        row.add(Constants.START_BOT);
+        row.add(Constants.STOP_BOT);
+        row.add(Constants.ADD_EXCHANGE);
+        row.add(Constants.REMOVE_EXCHANGE);
         return new ReplyKeyboardMarkup(List.of(row));
     }
 

@@ -33,9 +33,9 @@ public class BybitService implements ExchangeService {
     }
 
     @Override
-    public List<String> getAvailableOrderUrls(P2PRequest request, Filter filter, Multimap<Exchange, String> userIdCache,  Multimap<Exchange, String> foundUserIds) {
+    public Map<String, String> getAvailableOrderUrls(P2PRequest request, Filter filter, Multimap<Exchange, String> userIdCache,  Multimap<Exchange, String> foundUserIds) {
         List<P2PResponse> responses = new ArrayList<>();
-        List<String> foundOrderUrls = new ArrayList<>();
+        Map<String, String> foundOrderUrls = new HashMap<>();
         List<Item> items;
         int page = 1;
         do {
@@ -55,7 +55,7 @@ public class BybitService implements ExchangeService {
                 .forEach(item -> {
                     userIdCache.put(Exchange.BYBIT, item.getUserId());
                     foundUserIds.put(Exchange.BYBIT, item.getUserId());
-                    foundOrderUrls.add(String.format(Links.BYBIT_MERCHANT_URL, item.getUserId(), request.getCurrencyId()));
+                    foundOrderUrls.put(String.format(Links.BYBIT_MERCHANT_URL, item.getUserId(), request.getCurrencyId()), item.getUserId());
                 });
         return foundOrderUrls;
     }

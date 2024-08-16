@@ -7,9 +7,13 @@ import bot.data.Filter;
 import com.google.common.collect.Multimap;
 
 import java.util.List;
+import java.util.Map;
 
 
 public interface ExchangeService {
     List<P2PResponse> processResponses(List<P2PResponse> items, Filter filter);
-    List<String> getAvailableOrderUrls(P2PRequest request, Filter filter, Multimap<Exchange, String> userIdCache, Multimap<Exchange, String> foundUserIds);
+    // Method to get available order urls to  ids
+    Map<String, String> getAvailableOrderUrls(P2PRequest request, Filter filter,
+                                              Multimap<Exchange, String> userIdCache,
+                                              Multimap<Exchange, String> foundUserIds);
 }

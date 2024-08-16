@@ -36,20 +36,20 @@ public class P2PServiceImpl implements P2PService {
     public void parseOrders(P2PRequest request, Filter filter) {
         StringBuilder foundOrderUrls = new StringBuilder(urlCache);
         Multimap<Exchange, String> foundOrderIds = ArrayListMultimap.create();
-        List<String> newFoundOrderUrls = new ArrayList<>();
+        Map<String, String> newFoundOrderUrls = new HashMap<>();
 
         Collection<ExchangeService> exchangeServices = exchangeSubscriberService.getAllSubscribers();
 
         for (Currency currency : Currency.values()) {
             request.setCurrencyId(currency.name());
             for(ExchangeService exchangeService : exchangeServices) {
-                List<String> availableOrderUrls = exchangeService.getAvailableOrderUrls(request, filter, userIdCache, foundOrderIds);
-                newFoundOrderUrls.addAll(availableOrderUrls);
+                Map<String, String> availableOrderUrls = exchangeService.getAvailableOrderUrls(request, filter, userIdCache, foundOrderIds);
+                newFoundOrderUrls.putAll(availableOrderUrls);
             }
         }
 
         // create a string with all found urls
-        newFoundOrderUrls.forEach(url -> foundOrderUrls.append(url).append("\n\n"));
+        newFoundOrderUrls.forEach((url, id) -> foundOrderUrls.append(url).append("\n").append(id).append("\n\n"));
 
         if (!foundOrderUrls.isEmpty()) {
             log.info("Sending urls:\n" + foundOrderUrls);

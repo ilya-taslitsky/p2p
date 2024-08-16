@@ -42,6 +42,14 @@ public class P2PScheduler {
 
     }
 
+    public void start() {
+        if (lastRequest == null) {
+            log.error("Filter request is not set");
+            return;
+        }
+        start(lastRequest);
+    }
+
     public void stop() {
         log.info("Stopped parsing orders");
         if (timer != null) {
