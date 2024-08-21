@@ -54,10 +54,4 @@ public class BotController {
         message += "\nStatus: " + p2PScheduler.getLastRequest() + "\nExhanges:" + exchangeSubscriberService.getAllExchanges();
         return ResponseEntity.ok(message);
     }
-
-    @GetMapping("/test")
-    public ResponseEntity<String> test() {
-        clientService.test();
-        return ResponseEntity.ok("Test");
-    }
 }

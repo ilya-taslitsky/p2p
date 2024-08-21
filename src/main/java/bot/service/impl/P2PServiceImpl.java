@@ -96,7 +96,7 @@ public class P2PServiceImpl implements P2PService {
             log.warn("Client not found by ID: {}", id);
             throw new NotFoundException("Client not found by ID: " + id);
         }
-        log.info("Client deleted");
+        log.info("Client from {} with id {} deleted", exchange, id);
     }
 
     @Override
@@ -104,5 +104,16 @@ public class P2PServiceImpl implements P2PService {
         userIdCache.clear();
         clientService.deleteAll();
         log.info("All clients deleted");
+    }
+
+    @Override
+    public void deleteByTimer(Client client) {
+        Client clientServiceById = clientService.findById(client.getId());
+        if (clientServiceById.getExchange() != client.getExchange()) {
+            log.warn("Client not found by exchange: {}", client.getExchange());
+            throw new NotFoundException("Client not found by exchange: " + client.getExchange());
+        }
+
+        clientService.save(client);
     }
 }
