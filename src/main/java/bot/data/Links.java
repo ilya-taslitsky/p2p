@@ -7,5 +7,7 @@ public class Links {
     public static final String BYBIT_MERCHANT_URL = "https://www.bybit.com/fiat/trade/otc/profile/%s/USDT/%s/item";
     public static final String HUOBI_GET_ORDERS_URL = "https://www.htx.com/-/x/otc/v1/data/trade-market?coinId=2&currency=%s&tradeType=sell&currPage=%s&payMethod=34&acceptOrder=0&country=&blockType=general&online=1&range=0&amount=&isThumbsUp=false&isMerchant=false&isTraded=false&onlyTradable=false&isFollowed=false&makerCompleteRate=0";
     public static final String HUOBI_MERCHANT_URL = "https://www.htx.com/ru-ru/fiat-crypto/trader/%s";
+    public static final String BINANCE_GET_ORDERS_URL = "https://p2p.binance.com/bapi/c2c/v2/friendly/c2c/adv/search";
+    public static final String BINANCE_MERCHANT_URL = "https://p2p.binance.com/ru/advertiserDetail?advertiserNo=%s";
 }
 

@@ -17,7 +17,6 @@ import java.util.*;
 public class BybitService implements ExchangeService {
     private final BybitClient bybitClient;
 
-    @Override
     public List<P2PResponse> processResponses(List<P2PResponse> items, Filter filter) {
         double lastQuantity = filter.getLastQuantity() == null ? 0 : filter.getLastQuantity();
         return items.stream()

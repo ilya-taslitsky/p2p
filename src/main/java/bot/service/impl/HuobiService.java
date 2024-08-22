@@ -18,7 +18,7 @@ import java.util.*;
 public class HuobiService implements ExchangeService {
     private final HuobiClient huobiClient;
     private String baseUrl = Links.HUOBI_GET_ORDERS_URL;
-    @Override
+
     public List<P2PResponse> processResponses(List<P2PResponse> items, Filter filter) {
         double lastQuantity = filter.getLastQuantity() == null ? 0 : filter.getLastQuantity();
         return items.stream()

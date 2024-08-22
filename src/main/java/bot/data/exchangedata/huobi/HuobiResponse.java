@@ -1,7 +1,5 @@
 package bot.data.exchangedata.huobi;
 
-import lombok.Setter;
-
 import java.util.List;
 
 @lombok.Data

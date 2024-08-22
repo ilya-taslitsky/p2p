@@ -11,7 +11,6 @@ import java.util.Map;
 
 
 public interface ExchangeService {
-    List<P2PResponse> processResponses(List<P2PResponse> items, Filter filter);
     // Method to get available order urls to  ids
     Map<String, String> getAvailableOrderUrls(P2PRequest request, Filter filter,
                                               Multimap<Exchange, String> userIdCache,
