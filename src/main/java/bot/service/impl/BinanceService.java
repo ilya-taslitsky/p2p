@@ -31,10 +31,15 @@ public class BinanceService implements ExchangeService {
     @Override
     public Map<String, String> getAvailableOrderUrls(P2PRequest request, Filter filter, Multimap<Exchange, String> userIdCache, Multimap<Exchange, String> foundUserIds) {
         Map<String, String> foundOrderUrls = new HashMap<>();
-        if (!request.getCurrencyId().equals("USD")) {
+        if (request.getCurrencyId().equals("EUR")) {
             return foundOrderUrls;
         }
+        // TODO: refactor this shit
         BinanceRequest binanceRequest = new BinanceRequest();
+        List<String> payTypes = binanceRequest.getPayTypes();
+        if (request.getCurrencyId().equals("USD")) {
+            payTypes.add("Zelle");
+        }
         binanceRequest.setFiat(request.getCurrencyId());
         binanceRequest.setAsset(request.getTokenId());
 

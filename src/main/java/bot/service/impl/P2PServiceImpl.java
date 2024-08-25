@@ -54,8 +54,27 @@ public class P2PServiceImpl implements P2PService {
         if (!foundOrderUrls.isEmpty()) {
             log.info("Sending urls:\n" + foundOrderUrls);
 
+            // todo: refactor
             foundOrderUrls.append(urlCache.toString());
-            boolean isSent = appContext.getResponseHandler().sendOrders(foundOrderUrls.toString());
+            boolean isSent;
+            if (foundOrderUrls.length() < 4096) {
+                isSent = appContext.getResponseHandler().sendOrders(foundOrderUrls.toString());
+            } else {
+                String[] splitUrls = foundOrderUrls.toString().split("\n\n");
+                StringBuilder message = new StringBuilder();
+                int index = 0;
+                for (int i = index; i < splitUrls.length; i++) {
+                    if (message.length() + splitUrls[i].length() > 4096)  {
+                        appContext.getResponseHandler().sendOrders(message.toString());
+                        message = new StringBuilder();
+                    }
+                    message.append(splitUrls[i]).append("\n\n");
+                }
+                if (!message.isEmpty()) {
+                    appContext.getResponseHandler().sendOrders(message.toString());
+                }
+                isSent = true;
+            }
             if (isSent) {
                 log.info("Orders are sent. Clear cache");
                 urlCache = new StringBuilder();

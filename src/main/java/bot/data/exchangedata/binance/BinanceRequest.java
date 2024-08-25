@@ -20,6 +20,6 @@ public class BinanceRequest {
     private List<String> periods = new ArrayList<>();
     private int additionalKycVerifyFilter = 0;
     private String publisherType;
-    private List<String> payTypes = List.of("Zelle");
+    private List<String> payTypes = new ArrayList<>();
     private List<String> classifies = List.of("mass");
 }
