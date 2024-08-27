@@ -5,6 +5,9 @@ import bot.data.*;
 import bot.data.exchangedata.binance.BinanceRequest;
 import bot.data.exchangedata.binance.DataItem;
 import bot.service.ExchangeService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Multimap;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,15 +20,37 @@ import java.util.*;
 @RequiredArgsConstructor
 public class BinanceService implements ExchangeService {
     private final BinanceClient binanceClient;
+    private final ObjectMapper objectMapper;
 
     public List<DataItem> processResponses(List<DataItem> items, Filter filter) {
         double lastQuantity = filter.getLastQuantity() == null ? 0 : filter.getLastQuantity();
         return items.stream()
-                .filter(item -> item.getAdv().getTradeMethods().size() <= filter.getPaymentsCount()
-                        && item.getAdvertiser().getMonthOrderCount() <= filter.getRecentOrderNum()
-                        && Double.parseDouble(item.getAdv().getTradableQuantity()) <= filter.getMaxAmount()
-                        && Double.parseDouble(item.getAdv().getTradableQuantity()) >= lastQuantity)
+                .filter(item -> {
+                    boolean isOkBeforeOrdersCheck =
+                            item.getAdv().getTradeMethods().size() <= filter.getPaymentsCount()
+                            && item.getAdvertiser().getMonthOrderCount() <= filter.getRecentOrderNum()
+                            && Double.parseDouble(item.getAdv().getTradableQuantity()) <= filter.getMaxAmount()
+                            && Double.parseDouble(item.getAdv().getTradableQuantity()) >= lastQuantity;
+                    if (!isOkBeforeOrdersCheck) {
+                        return false;
+                    }
+
+                    String response = binanceClient.get(String.format(Links.BINANCE_USER_ORDERS_URL, item.getAdvertiser().getUserNo()));
+                    if (response == null) {
+                        return false;
+                    }
+
+                    try {
+                        JsonNode rootNode = objectMapper.readTree(response);
+                        return rootNode.at("/data/userDetailVo/userStatsRet/completedOrderNum").asInt() <= lastQuantity;
+                    } catch (JsonProcessingException e) {
+                        log.warn("Failed to parse response", e);
+                        return false;
+                    }
+                })
                 .toList();
+
+
     }
 
     @Override

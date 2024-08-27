@@ -32,5 +32,18 @@ public class BinanceClient {
                 log.error("Failed to send bybit request", e);
             }
           return null;
-        }
     }
+
+    public String get(String url) {
+        try {
+            return webClient.get()
+                    .uri(url)
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
+        } catch (Exception e) {
+            log.error("Failed to send bybit request", e);
+        }
+        return null;
+    }
+}
