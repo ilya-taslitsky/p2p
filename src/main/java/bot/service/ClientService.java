@@ -18,4 +18,6 @@ public interface ClientService {
     List<Client> findAllByExchange(Exchange exchange);
     List<Client> findAllByTimeToDelete(LocalDateTime localDateTime);
     List<Client> findAllByTimeToDeleteBefore(LocalDateTime before);
+
+    void deleteByExchange(Exchange exchange);
 }

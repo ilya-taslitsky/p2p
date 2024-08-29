@@ -58,4 +58,11 @@ public class ClientController {
         p2PService.deleteByTimer(new Client(clientDto.getId(), clientDto.getExchange(), clientDto.getTimeToDelete(), clientDto.getDescription()));
         return ResponseEntity.ok("Client will be deleted at " + clientDto.getTimeToDelete());
     }
+
+    @DeleteMapping("/{exchange}")
+    public ResponseEntity<String> deleteClientsByExchange(@PathVariable Exchange exchange) {
+        log.info("Triggered endpoint /clients/{}", exchange);
+        p2PService.deleteByExchange(exchange);
+        return ResponseEntity.ok("Clients deleted by exchange: " + exchange);
+    }
 }

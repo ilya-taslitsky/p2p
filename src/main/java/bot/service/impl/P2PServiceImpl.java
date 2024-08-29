@@ -15,8 +15,10 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
@@ -116,6 +118,14 @@ public class P2PServiceImpl implements P2PService {
             throw new NotFoundException("Client not found by ID: " + id);
         }
         log.info("Client from {} with id {} deleted", exchange, id);
+    }
+
+    @Transactional
+    @Modifying
+    public void deleteByExchange(Exchange exchange) {
+        userIdCache.removeAll(exchange);
+        clientService.deleteByExchange(exchange);
+        log.info("All clients from {} deleted", exchange);
     }
 
     @Override

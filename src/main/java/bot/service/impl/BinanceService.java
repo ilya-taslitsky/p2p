@@ -65,6 +65,7 @@ public class BinanceService implements ExchangeService {
         if (request.getCurrencyId().equals("USD")) {
             payTypes.add("Zelle");
         }
+        payTypes.add("BANK");
         binanceRequest.setFiat(request.getCurrencyId());
         binanceRequest.setAsset(request.getTokenId());
 

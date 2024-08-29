@@ -108,4 +108,12 @@ public class ClientServiceImpl implements ClientService {
         return clientDao.findByTimeToDeleteBefore(before);
     }
 
+    @Override
+    @Transactional
+    @Modifying
+    public void deleteByExchange(Exchange exchange) {
+        log.info("Delete all clients by exchange: {}", exchange);
+        clientDao.deleteAllByExchange(exchange);
+    }
+
 }

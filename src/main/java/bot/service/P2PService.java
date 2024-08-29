@@ -10,4 +10,5 @@ public interface P2PService {
      void deleteByExchangeAndId(Exchange exchange, String id);
      void deleteAll();
      void deleteByTimer(Client client);
+     void deleteByExchange(Exchange exchange);
 }

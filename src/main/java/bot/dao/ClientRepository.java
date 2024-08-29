@@ -15,4 +15,5 @@ public interface ClientRepository extends JpaRepository<Client, String> {
     List<Client> findByTimeToDelete(LocalDateTime timeToDelete);
     List<Client> findByExchange(Exchange exchange);
     List<Client> findByTimeToDeleteBefore(LocalDateTime timeToDelete);
+    void deleteAllByExchange(Exchange exchange);
 }
