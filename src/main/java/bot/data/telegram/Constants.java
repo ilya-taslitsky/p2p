@@ -11,4 +11,6 @@ public class Constants {
     public static final String STOP_BOT = "Stop Bot";
     public static final String ADD_EXCHANGE = "Add exchange";
     public static final String REMOVE_EXCHANGE = "Remove exchange";
+    public static final String ADD_PAYMENT_METHOD = "Add payment method";
+    public static final String REMOVE_PAYMENT_METHOD = "Remove payment method";
 }

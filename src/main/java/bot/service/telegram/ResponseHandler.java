@@ -1,11 +1,13 @@
 package bot.service.telegram;
 
 import bot.data.Exchange;
+import bot.data.PaymentMethod;
 import bot.data.telegram.UserState;
 import bot.data.telegram.Constants;
 import bot.service.ClientService;
 import bot.service.ExchangeSubscriberService;
 import bot.service.P2PScheduler;
+import bot.service.impl.BinanceService;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -20,10 +22,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 
@@ -38,6 +37,7 @@ public class ResponseHandler {
     private Map<Long, UserState> chatStates;
     private final P2PScheduler p2PScheduler;
     private final ExchangeSubscriberService exchangeSubscriberService;
+    private final BinanceService binanceService;
 
     public void replyToStart(long chatId) {
         SendMessage message = new SendMessage();
@@ -83,6 +83,28 @@ public class ResponseHandler {
                 chatStates.put(chatId, UserState.AUTHENTICATED);
 
             }
+            case ADD_PAYMENT_METHOD -> {
+                if (messageText.equals("Exit")) {
+                    promptWithKeyboardForState(chatId, "Exited", getButtons());
+                    chatStates.put(chatId, UserState.AUTHENTICATED);
+                    return;
+                }
+                PaymentMethod paymentMethod = PaymentMethod.fromString(messageText);
+                binanceService.getPaymentMethods().add(paymentMethod);
+                promptWithKeyboardForState(chatId, "Payment method added", getButtons());
+                chatStates.put(chatId, UserState.AUTHENTICATED);
+            }
+            case REMOVE_PAYMENT_METHOD -> {
+                if (messageText.equals("Exit")) {
+                    promptWithKeyboardForState(chatId, "Exited", getButtons());
+                    chatStates.put(chatId, UserState.AUTHENTICATED);
+                    return;
+                }
+                PaymentMethod paymentMethod = PaymentMethod.fromString(messageText);
+                binanceService.getPaymentMethods().remove(paymentMethod);
+                promptWithKeyboardForState(chatId, "Payment method removed", getButtons());
+                chatStates.put(chatId, UserState.AUTHENTICATED);
+            }
             case AUTHENTICATED ->  {
                 reactToButtons(chatId, messageText);
             }
@@ -125,6 +147,14 @@ public class ResponseHandler {
                 chatStates.put(chatId, UserState.REMOVE_EXCHANGE);
                 promptWithKeyboardForState(chatId, "Select exchange to remove", getExchanges(false));
             }
+            case Constants.ADD_PAYMENT_METHOD -> {
+                chatStates.put(chatId, UserState.ADD_PAYMENT_METHOD);
+                promptWithKeyboardForState(chatId, "Select payment method for Binance to add", getPaymentMethods(true));
+            }
+            case Constants.REMOVE_PAYMENT_METHOD -> {
+                chatStates.put(chatId, UserState.REMOVE_PAYMENT_METHOD);
+                promptWithKeyboardForState(chatId, "Select payment method for Binance to remove", getPaymentMethods(false));
+            }
             default -> sendMessage(chatId, "Unknown command");
         }
     }
@@ -139,6 +169,23 @@ public class ResponseHandler {
             for (Exchange exchange : Exchange.values()) {
                 if (!selectedExchanges.contains(exchange)) {
                     row.add(exchange.name());
+                }
+            }
+        }
+        row.add("Exit");
+        return new ReplyKeyboardMarkup(List.of(row));
+    }
+
+    private ReplyKeyboard getPaymentMethods(boolean isAdd) {
+        KeyboardRow row = new KeyboardRow();
+        Collection<PaymentMethod> selectedPaymentMethods = binanceService.getPaymentMethods();
+        if (!isAdd) {
+            selectedPaymentMethods.stream().map(Enum::name).forEach(row::add);
+        } else {
+            // add all exchanges that are not in selectedExchanges
+            for (PaymentMethod paymentMethod : PaymentMethod.values()) {
+                if (!selectedPaymentMethods.contains(paymentMethod)) {
+                    row.add(paymentMethod.name());
                 }
             }
         }
@@ -162,13 +209,26 @@ public class ResponseHandler {
     }
 
     private ReplyKeyboard getButtons(){
-        KeyboardRow row = new KeyboardRow();
-        row.add(Constants.BOT_BOT_STATUS);
-        row.add(Constants.START_BOT);
-        row.add(Constants.STOP_BOT);
-        row.add(Constants.ADD_EXCHANGE);
-        row.add(Constants.REMOVE_EXCHANGE);
-        return new ReplyKeyboardMarkup(List.of(row));
+        KeyboardRow row1 = new KeyboardRow();
+        row1.add(Constants.BOT_BOT_STATUS);
+        row1.add(Constants.START_BOT);
+        row1.add(Constants.STOP_BOT);
+        row1.add(Constants.ADD_EXCHANGE);
+
+        KeyboardRow row2 = new KeyboardRow();
+        row2.add(Constants.REMOVE_EXCHANGE);
+        row2.add(Constants.ADD_PAYMENT_METHOD);
+        row2.add(Constants.REMOVE_PAYMENT_METHOD);
+
+        List<KeyboardRow> rows = new ArrayList<>();
+        rows.add(row1);
+        rows.add(row2);
+
+        ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup(rows);
+        keyboardMarkup.setResizeKeyboard(true);
+        keyboardMarkup.setOneTimeKeyboard(false);
+
+        return keyboardMarkup;
     }
 
 

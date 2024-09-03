@@ -9,10 +9,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Multimap;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.util.*;
 
 @Service(value = "BINANCE")
@@ -21,7 +23,12 @@ import java.util.*;
 public class BinanceService implements ExchangeService {
     private final BinanceClient binanceClient;
     private final ObjectMapper objectMapper;
-
+    @Getter
+    private List<PaymentMethod> paymentMethods = new ArrayList<>();
+    @PostConstruct
+    public void init() {
+        paymentMethods.add(PaymentMethod.BANK);
+    }
     public List<DataItem> processResponses(List<DataItem> items, Filter filter) {
         double lastQuantity = filter.getLastQuantity() == null ? 0 : filter.getLastQuantity();
         return items.stream()
@@ -62,10 +69,13 @@ public class BinanceService implements ExchangeService {
         // TODO: refactor this shit
         BinanceRequest binanceRequest = new BinanceRequest();
         List<String> payTypes = binanceRequest.getPayTypes();
-        if (request.getCurrencyId().equals("USD")) {
-            payTypes.add("Zelle");
+        if (request.getCurrencyId().equals("USD") && paymentMethods.contains(PaymentMethod.Zelle)) {
+            payTypes.add(PaymentMethod.Zelle.name());
         }
-        payTypes.add("BANK");
+        if (paymentMethods.contains(PaymentMethod.BANK)) {
+            payTypes.add(PaymentMethod.BANK.name());
+        }
+
         binanceRequest.setFiat(request.getCurrencyId());
         binanceRequest.setAsset(request.getTokenId());
 
@@ -95,4 +105,6 @@ public class BinanceService implements ExchangeService {
                 });
         return foundOrderUrls;
     }
+
+
 }

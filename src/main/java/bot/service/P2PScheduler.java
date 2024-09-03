@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -21,6 +23,20 @@ public class P2PScheduler {
     private boolean isStarted;
     private FilterRequest lastRequest;
     private final Mapper mapper;
+
+    @PostConstruct
+    public void init() {
+        lastRequest = new FilterRequest();
+        lastRequest.setTokenId("USDT");
+        lastRequest.setPayment(List.of("78"));
+        lastRequest.setSide("1");
+        lastRequest.setRecentOrderNum(100);
+        lastRequest.setLastQuantity(200.);
+        lastRequest.setMaxAmount(3000.00);
+        lastRequest.setMinAmount(0.00);
+        lastRequest.setHasRegisterTime(0);
+        lastRequest.setPaymentsCount(4);
+    }
 
     public void start(FilterRequest filterRequest) {
         this.lastRequest = filterRequest;
