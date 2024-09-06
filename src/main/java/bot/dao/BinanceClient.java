@@ -29,7 +29,7 @@ public class BinanceClient {
                         .block();
                 return response.getBody().getData();
             } catch (Exception e) {
-                log.error("Failed to send bybit request", e);
+                log.error("Failed to send binance request", e);
             }
           return null;
     }
@@ -42,7 +42,7 @@ public class BinanceClient {
                     .bodyToMono(String.class)
                     .block();
         } catch (Exception e) {
-            log.error("Failed to send bybit request", e);
+            log.error("Failed to send binance request", e);
         }
         return null;
     }

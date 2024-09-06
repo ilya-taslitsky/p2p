@@ -49,7 +49,7 @@ public class BinanceService implements ExchangeService {
 
                     try {
                         JsonNode rootNode = objectMapper.readTree(response);
-                        return rootNode.at("/data/userDetailVo/userStatsRet/completedOrderNum").asInt() <= lastQuantity;
+                        return rootNode.at("/data/userDetailVo/userStatsRet/completedOrderNum").asInt() <= filter.getRecentOrderNum();
                     } catch (JsonProcessingException e) {
                         log.warn("Failed to parse response", e);
                         return false;
