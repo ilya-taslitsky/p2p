@@ -25,6 +25,7 @@ public class BinanceService implements ExchangeService {
     private final ObjectMapper objectMapper;
     @Getter
     private List<PaymentMethod> paymentMethods = new ArrayList<>();
+    private final List<String> fiats = List.of("BTC", "USDT", "USDC");
     @PostConstruct
     public void init() {
         paymentMethods.add(PaymentMethod.BANK);
@@ -76,33 +77,36 @@ public class BinanceService implements ExchangeService {
             payTypes.add(PaymentMethod.BANK.name());
         }
 
+
         binanceRequest.setFiat(request.getCurrencyId());
-        binanceRequest.setAsset(request.getTokenId());
+        for (String fiat : fiats) {
+            binanceRequest.setAsset(fiat);
+            List<DataItem> items;
+            List<DataItem> foundOrders = new ArrayList<>();
+            int page = 1;
+            do {
+                binanceRequest.setPage(page);
+                items = binanceClient.findOrdersWithFilter(binanceRequest);
+                if (items == null) {
+                    log.warn("Failed to send binance request");
+                    continue;
+                }
+                foundOrders.addAll(items);
+                page++;
+            } while (!Objects.requireNonNull(items).isEmpty());
 
-        List<DataItem> items;
-        List<DataItem> foundOrders = new ArrayList<>();
-        int page = 1;
-        do {
-           binanceRequest.setPage(page);
-            items = binanceClient.findOrdersWithFilter(binanceRequest);
-            if(items == null) {
-                log.warn("Failed to send binance request");
-                continue;
-            }
-            foundOrders.addAll(items);
-            page++;
-        } while (!Objects.requireNonNull(items).isEmpty());
-
-        List<DataItem> processResponses = processResponses(foundOrders, filter);
+            List<DataItem> processResponses = processResponses(foundOrders, filter);
 
 
-        processResponses.stream()
-                .filter(item -> !userIdCache.containsEntry(Exchange.BINANCE, item.getAdvertiser().getUserNo()))
-                .forEach(item -> {
-                    userIdCache.put(Exchange.BINANCE,  item.getAdvertiser().getUserNo());
-                    foundUserIds.put(Exchange.BINANCE,  item.getAdvertiser().getUserNo());
-                    foundOrderUrls.put(String.format(Links.BINANCE_MERCHANT_URL,  item.getAdvertiser().getUserNo()), item.getAdvertiser().getUserNo());
-                });
+            processResponses.stream()
+                    .filter(item -> !userIdCache.containsEntry(Exchange.BINANCE, item.getAdvertiser().getUserNo()))
+                    .forEach(item -> {
+                        userIdCache.put(Exchange.BINANCE, item.getAdvertiser().getUserNo());
+                        foundUserIds.put(Exchange.BINANCE, item.getAdvertiser().getUserNo());
+                        foundOrderUrls.put(String.format(Links.BINANCE_MERCHANT_URL, item.getAdvertiser().getUserNo()), item.getAdvertiser().getUserNo());
+                    });
+        }
+
         return foundOrderUrls;
     }
 

@@ -18,7 +18,7 @@ import java.util.TimerTask;
 @Getter
 public class P2PScheduler {
     private Timer timer;
-    private static final int TIMER_COOLDOWN = 30_000;
+    private static final int TIMER_COOLDOWN = 60_000;
     private final P2PService p2PService;
     private boolean isStarted;
     private FilterRequest lastRequest;
