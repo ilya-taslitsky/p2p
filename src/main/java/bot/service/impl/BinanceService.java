@@ -16,6 +16,8 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service(value = "BINANCE")
 @Slf4j
@@ -26,6 +28,9 @@ public class BinanceService implements ExchangeService {
     @Getter
     private List<PaymentMethod> paymentMethods = new ArrayList<>();
     private final List<String> fiats = List.of("BTC", "USDT", "USDC");
+    private Pattern pattern = Pattern.compile("(?i)w[\\W_]*i[\\W_]*s[\\W_]*e");
+    private String wiseSiren = "\uD83D\uDEA8 WISE \uD83D\uDEA8 \n";
+
     @PostConstruct
     public void init() {
         paymentMethods.add(PaymentMethod.BANK);
@@ -43,7 +48,7 @@ public class BinanceService implements ExchangeService {
                         return false;
                     }
 
-                    String response = binanceClient.get(String.format(Links.BINANCE_USER_ORDERS_URL, item.getAdvertiser().getUserNo()));
+                    String response = binanceClient.get(item.getAdvertiser().getUserNo());
                     if (response == null) {
                         return false;
                     }
@@ -64,9 +69,6 @@ public class BinanceService implements ExchangeService {
     @Override
     public Map<String, String> getAvailableOrderUrls(P2PRequest request, Filter filter, Multimap<Exchange, String> userIdCache, Multimap<Exchange, String> foundUserIds) {
         Map<String, String> foundOrderUrls = new HashMap<>();
-        if (request.getCurrencyId().equals("EUR")) {
-            return foundOrderUrls;
-        }
         // TODO: refactor this shit
         BinanceRequest binanceRequest = new BinanceRequest();
         List<String> payTypes = binanceRequest.getPayTypes();
@@ -76,7 +78,10 @@ public class BinanceService implements ExchangeService {
         if (paymentMethods.contains(PaymentMethod.BANK)) {
             payTypes.add(PaymentMethod.BANK.name());
         }
-
+        if (request.getCurrencyId().equals("EUR")) {
+            payTypes.add(PaymentMethod.SEPAinstant.name());
+            payTypes.add(PaymentMethod.SEPA.name());
+        }
 
         binanceRequest.setFiat(request.getCurrencyId());
         for (String fiat : fiats) {
@@ -103,7 +108,28 @@ public class BinanceService implements ExchangeService {
                     .forEach(item -> {
                         userIdCache.put(Exchange.BINANCE, item.getAdvertiser().getUserNo());
                         foundUserIds.put(Exchange.BINANCE, item.getAdvertiser().getUserNo());
-                        foundOrderUrls.put(String.format(Links.BINANCE_MERCHANT_URL, item.getAdvertiser().getUserNo()), item.getAdvertiser().getUserNo());
+                        Matcher matcher = pattern.matcher(item.getAdvertiser().getNickName());
+                        boolean isWiseFound = false;
+                        if (matcher.find()) {
+                            isWiseFound = true;
+                        } else {
+                            String userDetails = binanceClient.getUserDetails(item.getAdv().getAdvNo());
+                            try {
+                                JsonNode rootNode = objectMapper.readTree(userDetails);
+                                String remarks = rootNode.at("/data/remarks").asText();
+                                matcher = pattern.matcher(remarks);
+                                if (matcher.find()) {
+                                    isWiseFound = true;
+                                }
+                            } catch (JsonProcessingException e) {
+                               log.warn("Failed to parse order remarks response", e);
+                            }
+                        }
+                        String url = String.format(Links.BINANCE_MERCHANT_URL, item.getAdvertiser().getUserNo());
+                        if (isWiseFound) {
+                            url = wiseSiren + url;
+                        }
+                        foundOrderUrls.put(url, item.getAdvertiser().getUserNo());
                     });
         }
 

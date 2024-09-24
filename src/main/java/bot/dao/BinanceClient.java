@@ -34,7 +34,22 @@ public class BinanceClient {
           return null;
     }
 
-    public String get(String url) {
+    public String get(String userNo) {
+        String url = Links.BINANCE_USER_ORDERS_URL + userNo;
+        try {
+            return webClient.get()
+                    .uri(url)
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
+        } catch (Exception e) {
+            log.error("Failed to send binance request", e);
+        }
+        return null;
+    }
+
+    public String getUserDetails(String advNo) {
+        String url = Links.BINANCE_ORDER_DETAIL_URL + advNo;
         try {
             return webClient.get()
                     .uri(url)

@@ -9,6 +9,7 @@ public class Links {
     public static final String HUOBI_MERCHANT_URL = "https://www.htx.com/ru-ru/fiat-crypto/trader/%s";
     public static final String BINANCE_GET_ORDERS_URL = "https://p2p.binance.com/bapi/c2c/v2/friendly/c2c/adv/search";
     public static final String BINANCE_MERCHANT_URL = "https://p2p.binance.com/ru/advertiserDetail?advertiserNo=%s";
-    public static final String BINANCE_USER_ORDERS_URL = "https://p2p.binance.com/bapi/c2c/v2/friendly/c2c/user/profile-and-ads-list?userNo=%S";
+    public static final String BINANCE_USER_ORDERS_URL = "https://p2p.binance.com/bapi/c2c/v2/friendly/c2c/user/profile-and-ads-list?userNo=";
+    public static final String BINANCE_ORDER_DETAIL_URL = "https://p2p.binance.com/bapi/c2c/v2/public/c2c/adv/detail?advNo=";
 }
 
