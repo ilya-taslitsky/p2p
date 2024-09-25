@@ -35,12 +35,15 @@ public class BinanceService implements ExchangeService {
     public void init() {
         paymentMethods.add(PaymentMethod.BANK);
     }
-    public List<DataItem> processResponses(List<DataItem> items, Filter filter) {
+    private List<DataItem> processResponses(List<DataItem> items, Filter filter, Multimap<Exchange, String> userIdCache) {
         double lastQuantity = filter.getLastQuantity() == null ? 0 : filter.getLastQuantity();
         return items.stream()
                 .filter(item -> {
+                    if (userIdCache.containsEntry(Exchange.BINANCE, item.getAdvertiser().getUserNo())) {
+                        return false;
+                    }
                     boolean isOkBeforeOrdersCheck =
-                            item.getAdv().getTradeMethods().size() <= filter.getPaymentsCount()
+                    item.getAdv().getTradeMethods().size() <= filter.getPaymentsCount()
                             && item.getAdvertiser().getMonthOrderCount() <= filter.getRecentOrderNum()
                             && Double.parseDouble(item.getAdv().getTradableQuantity()) <= filter.getMaxAmount()
                             && Double.parseDouble(item.getAdv().getTradableQuantity()) >= lastQuantity;
@@ -100,11 +103,10 @@ public class BinanceService implements ExchangeService {
                 page++;
             } while (!Objects.requireNonNull(items).isEmpty());
 
-            List<DataItem> processResponses = processResponses(foundOrders, filter);
+            List<DataItem> processResponses = processResponses(foundOrders, filter, userIdCache);
 
 
-            processResponses.stream()
-                    .filter(item -> !userIdCache.containsEntry(Exchange.BINANCE, item.getAdvertiser().getUserNo()))
+            processResponses
                     .forEach(item -> {
                         userIdCache.put(Exchange.BINANCE, item.getAdvertiser().getUserNo());
                         foundUserIds.put(Exchange.BINANCE, item.getAdvertiser().getUserNo());

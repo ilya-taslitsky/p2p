@@ -17,10 +17,12 @@ import java.util.*;
 public class BybitService implements ExchangeService {
     private final BybitClient bybitClient;
 
-    public List<P2PResponse> processResponses(List<P2PResponse> items, Filter filter) {
+    private List<P2PResponse> processResponses(List<P2PResponse> items, Filter filter, Multimap<Exchange, String> userIdCache) {
         double lastQuantity = filter.getLastQuantity() == null ? 0 : filter.getLastQuantity();
         return items.stream()
-                .filter(item -> item.getAuthStatus() == 2
+                .filter(
+                        item -> !userIdCache.containsEntry(Exchange.BYBIT, item.getUserId())
+                        && item.getAuthStatus() == 2
                         && item.getCompleteOrderRate() == 0
                         && item.getPayments().size() <= filter.getPaymentsCount()
                         && item.getPayments().contains("Wise")
@@ -47,10 +49,9 @@ public class BybitService implements ExchangeService {
             responses.addAll(items);
             page++;
         } while (!Objects.requireNonNull(items).isEmpty());
-        List<P2PResponse> processResponses = processResponses(responses, filter);
+        List<P2PResponse> processResponses = processResponses(responses, filter, userIdCache);
 
-        processResponses.stream()
-                .filter(item -> !userIdCache.containsEntry(Exchange.BYBIT, item.getUserId()))
+        processResponses
                 .forEach(item -> {
                     userIdCache.put(Exchange.BYBIT, item.getUserId());
                     foundUserIds.put(Exchange.BYBIT, item.getUserId());

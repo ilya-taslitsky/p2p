@@ -22,10 +22,12 @@ public class OkxService implements ExchangeService {
     private final OkxClient okxClient;
     private final Mapper mapper;
 
-    public List<P2PResponse> processResponses(List<P2PResponse> items, Filter filter) {
+    public List<P2PResponse> processResponses(List<P2PResponse> items, Filter filter, Multimap<Exchange, String> userIdCache) {
         double lastQuantity = filter.getLastQuantity() == null ? 0 : filter.getLastQuantity();
         return items.stream()
-                .filter(item -> item.getAuthStatus() == 2
+                .filter(
+                        item -> !userIdCache.containsEntry(Exchange.BYBIT, item.getUserId())
+                        && item.getAuthStatus() == 2
                         && item.getPremium().equals("0")
                         && item.getCompleteOrderRate() == 0
                         && item.getPayments().size() <= filter.getPaymentsCount()
@@ -43,9 +45,8 @@ public class OkxService implements ExchangeService {
         OkxRequest okxRequest = mapper.mapToOkxRequest(request);
         String urlWithParams = String.format(baseUrl, okxRequest.getCryptoCurrency(), okxRequest.getCurrency(), okxRequest.getTimestamp());
         List<P2PResponse> responses = new ArrayList<>(okxClient.findOrdersWithFilter(urlWithParams));
-        List<P2PResponse> processResponses = processResponses(responses, filter);
-        processResponses.stream()
-                .filter(item -> !userIdCache.containsEntry(Exchange.OKX, item.getUserId()))
+        List<P2PResponse> processResponses = processResponses(responses, filter, userIdCache);
+        processResponses
                 .forEach(item -> {
                     userIdCache.put(Exchange.OKX,item.getUserId());
                     foundUserIds.put(Exchange.OKX, item.getUserId());
