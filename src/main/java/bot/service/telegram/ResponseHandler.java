@@ -180,11 +180,11 @@ public class ResponseHandler {
         KeyboardRow row = new KeyboardRow();
         Collection<PaymentMethod> selectedPaymentMethods = binanceService.getPaymentMethods();
         if (!isAdd) {
-            selectedPaymentMethods.stream().map(Enum::name).forEach(row::add);
+            selectedPaymentMethods.stream().map(Enum::name).filter(str -> !str.contains("SEPA")).forEach(row::add);
         } else {
             // add all exchanges that are not in selectedExchanges
             for (PaymentMethod paymentMethod : PaymentMethod.values()) {
-                if (!selectedPaymentMethods.contains(paymentMethod)) {
+                if (!selectedPaymentMethods.contains(paymentMethod) && !paymentMethod.name().contains("SEPA")) {
                     row.add(paymentMethod.name());
                 }
             }

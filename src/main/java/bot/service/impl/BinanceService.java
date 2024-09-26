@@ -28,8 +28,10 @@ public class BinanceService implements ExchangeService {
     @Getter
     private List<PaymentMethod> paymentMethods = new ArrayList<>();
     private final List<String> fiats = List.of("BTC", "USDT", "USDC");
-    private Pattern pattern = Pattern.compile("(?i)(\\b(?!other\\W*_?wise\\b)w[\\W_]*i[\\W_]*s[\\W_]*e\\b)");
+    private Pattern wisePattern = Pattern.compile("(?i)(\\b(?!other\\W*_?wise\\b)w[\\W_]*i[\\W_]*s[\\W_]*e\\b)");
+    private Pattern revoPattern = Pattern.compile("(?i)r[\\W_]*e[\\W_]*v[\\W_]*o([\\W_]*l[\\W_]*u[\\W_]*t[\\W_]*e)?");
     private String wiseSiren = "\uD83D\uDEA8 WISE \uD83D\uDEA8 \n";
+    private String revoSiren = "\uD83D\uDEA8 REVOLUT \uD83D\uDEA8 \n";
 
     @PostConstruct
     public void init() {
@@ -84,6 +86,9 @@ public class BinanceService implements ExchangeService {
         if (request.getCurrencyId().equals("EUR")) {
             payTypes.add(PaymentMethod.SEPAinstant.name());
             payTypes.add(PaymentMethod.SEPA.name());
+            if (paymentMethods.contains(PaymentMethod.ZEN)) {
+                payTypes.add(PaymentMethod.ZEN.name());
+            }
         }
 
         binanceRequest.setFiat(request.getCurrencyId());
@@ -110,18 +115,25 @@ public class BinanceService implements ExchangeService {
                     .forEach(item -> {
                         userIdCache.put(Exchange.BINANCE, item.getAdvertiser().getUserNo());
                         foundUserIds.put(Exchange.BINANCE, item.getAdvertiser().getUserNo());
-                        Matcher matcher = pattern.matcher(item.getAdvertiser().getNickName());
+                        Matcher wiseMatcher = wisePattern.matcher(item.getAdvertiser().getNickName());
+                        Matcher revoMatcher = revoPattern.matcher(item.getAdvertiser().getNickName());
                         boolean isWiseFound = false;
-                        if (matcher.find()) {
+                        boolean isRevoFound = false;
+                        if (wiseMatcher.find()) {
                             isWiseFound = true;
+                        } else if(revoMatcher.find()) {
+                            isRevoFound = true;
                         } else {
                             String userDetails = binanceClient.getUserDetails(item.getAdv().getAdvNo());
                             try {
                                 JsonNode rootNode = objectMapper.readTree(userDetails);
                                 String remarks = rootNode.at("/data/remarks").asText();
-                                matcher = pattern.matcher(remarks);
-                                if (matcher.find()) {
+                                wiseMatcher = wisePattern.matcher(remarks);
+                                revoMatcher = revoPattern.matcher(remarks);
+                                if (wiseMatcher.find()) {
                                     isWiseFound = true;
+                                } else if(revoMatcher.find()) {
+                                    isRevoFound = true;
                                 }
                             } catch (JsonProcessingException e) {
                                log.warn("Failed to parse order remarks response", e);
@@ -130,6 +142,9 @@ public class BinanceService implements ExchangeService {
                         String url = String.format(Links.BINANCE_MERCHANT_URL, item.getAdvertiser().getUserNo());
                         if (isWiseFound) {
                             url = wiseSiren + url;
+                        }
+                        if (isRevoFound) {
+                            url = revoSiren + url;
                         }
                         foundOrderUrls.put(url, item.getAdvertiser().getUserNo());
                     });

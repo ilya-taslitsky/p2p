@@ -23,7 +23,8 @@ public class ExchangeSubscriberServiceImpl implements ExchangeSubscriberService,
     @PostConstruct
     public void init() {
         exchangeServices.put(Exchange.BYBIT, applicationContext.getBean(Exchange.BYBIT.name(), ExchangeService.class));
-        log.info("ExchangeSubscriberService initialized with default exchange: BYBIT");
+        exchangeServices.put(Exchange.BINANCE, applicationContext.getBean(Exchange.BINANCE.name(), ExchangeService.class));
+        log.info("ExchangeSubscriberService initialized with default exchange: BYBIT, BINANCE");
     }
 
     @Override

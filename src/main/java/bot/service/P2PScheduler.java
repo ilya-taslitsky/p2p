@@ -30,8 +30,8 @@ public class P2PScheduler {
         lastRequest.setTokenId("USDT");
         lastRequest.setPayment(List.of("78"));
         lastRequest.setSide("1");
-        lastRequest.setRecentOrderNum(100);
-        lastRequest.setLastQuantity(200.);
+        lastRequest.setRecentOrderNum(300);
+        lastRequest.setLastQuantity(300.);
         lastRequest.setMaxAmount(3000.00);
         lastRequest.setMinAmount(0.00);
         lastRequest.setHasRegisterTime(0);

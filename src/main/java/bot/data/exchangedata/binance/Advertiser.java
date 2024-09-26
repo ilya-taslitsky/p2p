@@ -25,7 +25,6 @@ public class Advertiser {
     private List<String> tagIconUrls;
     private int userGrade;
     private String userIdentity;
-    private String proMerchant;
     private List<String> badges;
     private String isBlocked;
     private int activeTimeInSecond;
