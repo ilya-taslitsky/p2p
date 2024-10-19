@@ -28,7 +28,7 @@ public class BinanceService implements ExchangeService {
     @Getter
     private List<PaymentMethod> paymentMethods = new ArrayList<>();
     private final List<String> fiats = List.of("BTC", "USDT", "USDC");
-    private Pattern wisePattern = Pattern.compile("(?i)(\\b(?!other\\W*_?wise\\b)w[\\W_]*i[\\W_]*s[\\W_]*e\\b)");
+    private Pattern wisePattern = Pattern.compile("(?i)w[\\W_]*i[\\W_]*s[\\W_]*e(?![\\W_]*other)");
     private Pattern revoPattern = Pattern.compile("(?i)r[\\W_]*e[\\W_]*v[\\W_]*o([\\W_]*l[\\W_]*u[\\W_]*t[\\W_]*e)?");
     private String wiseSiren = "\uD83D\uDEA8 WISE \uD83D\uDEA8 \n";
     private String revoSiren = "\uD83D\uDEA8 REVOLUT \uD83D\uDEA8 \n";

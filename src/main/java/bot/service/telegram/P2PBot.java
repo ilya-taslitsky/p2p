@@ -15,6 +15,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 
 import java.util.function.BiConsumer;
 
+import static org.telegram.abilitybots.api.objects.Locality.ALL;
 import static org.telegram.abilitybots.api.objects.Locality.USER;
 import static org.telegram.abilitybots.api.util.AbilityUtils.getChatId;
 
@@ -39,7 +40,7 @@ public class P2PBot extends AbilityBot {
                 .builder()
                 .name("start")
                 .info(Constants.START_DESCRIPTION)
-                .locality(USER)
+                .locality(ALL)
                 .privacy(Privacy.PUBLIC)
                 .action(ctx -> responseHandler.replyToStart(ctx.chatId()))
                 .build();
