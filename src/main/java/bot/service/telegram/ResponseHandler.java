@@ -250,4 +250,8 @@ public class ResponseHandler {
         }
         return null;
     }
+
+    public void removeChatState(long chatId) {
+        chatStates.remove(chatId);
+    }
 }
