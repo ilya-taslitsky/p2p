@@ -216,7 +216,7 @@ public class ResponseHandler {
                 }
             } else {
                 for (PaymentMethod paymentMethod : PaymentMethod.values()) {
-                    if (!selectedPaymentMethods.contains(paymentMethod) && (paymentMethod.equals(PaymentMethod.WISE) || paymentMethod.equals(PaymentMethod.SkrillMoneybooker))) {
+                    if (!selectedPaymentMethods.contains(paymentMethod) && (paymentMethod.equals(PaymentMethod.WISE) || paymentMethod.equals(PaymentMethod.SkrillMoneybookers))) {
                         KeyboardRow row = new KeyboardRow();
                         row.add(exchange + ":" + paymentMethod.name());
                         rows.add(row);
