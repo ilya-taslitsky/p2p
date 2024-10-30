@@ -90,6 +90,9 @@ public class BinanceService implements ExchangeService {
                 payTypes.add(PaymentMethod.ZEN.name());
             }
         }
+        if (paymentMethods.contains(PaymentMethod.SkrillMoneybooker)) {
+            payTypes.add(PaymentMethod.SkrillMoneybooker.name());
+        }
 
         binanceRequest.setFiat(request.getCurrencyId());
         for (String fiat : fiats) {
