@@ -1,7 +1,7 @@
 package bot.service.telegram;
 
-import bot.data.Exchange;
-import bot.data.PaymentMethod;
+import bot.data.ExchangeEnum;
+import bot.data.PaymentMethodEnum;
 import bot.data.telegram.UserState;
 import bot.data.telegram.Constants;
 import bot.service.ExchangeSubscriberService;
@@ -72,32 +72,32 @@ public class ResponseHandler {
                 }
             }
             case ADD_EXCHANGE -> {
-                Exchange exchange = Exchange.fromString(messageText);
+                ExchangeEnum exchange = ExchangeEnum.fromString(messageText);
                 exchangeSubscriberService.subscribe(exchange);
                 promptWithKeyboardForState(chatId, "Exchange added", getButtons());
                 chatStates.put(chatId, UserState.AUTHENTICATED);
             }
             case REMOVE_EXCHANGE -> {
-                Exchange exchange = Exchange.fromString(messageText);
+                ExchangeEnum exchange = ExchangeEnum.fromString(messageText);
                 exchangeSubscriberService.unsubscribe(exchange);
                 promptWithKeyboardForState(chatId, "Exchange removed", getButtons());
                 chatStates.put(chatId, UserState.AUTHENTICATED);
 
             }
             case SELECT_EXCHANGE_ADD_PAYMENT_METHOD -> {
-                Exchange exchange = Exchange.fromString(messageText);
+                ExchangeEnum exchange = ExchangeEnum.fromString(messageText);
                 promptWithKeyboardForState(chatId, "Select payment method to add", getPaymentMethods(true, exchange));
                 chatStates.put(chatId, UserState.ADD_PAYMENT_METHOD);
             }
             case SELECT_EXCHANGE_REMOVE_PAYMENT_METHOD -> {
-                Exchange exchange = Exchange.fromString(messageText);
+                ExchangeEnum exchange = ExchangeEnum.fromString(messageText);
                 promptWithKeyboardForState(chatId, "Select payment method to remove", getPaymentMethods(false, exchange));
                 chatStates.put(chatId, UserState.REMOVE_PAYMENT_METHOD);
             }
             case ADD_PAYMENT_METHOD -> {
                 String[] split = messageText.split(":");
-                Exchange exchange = Exchange.fromString(split[0]);
-                PaymentMethod paymentMethod = PaymentMethod.fromString(split[1]);
+                ExchangeEnum exchange = ExchangeEnum.fromString(split[0]);
+                PaymentMethodEnum paymentMethod = PaymentMethodEnum.fromString(split[1]);
                 switch (exchange) {
                     case BINANCE -> {
                         binanceService.getPaymentMethods().add(paymentMethod);
@@ -111,8 +111,8 @@ public class ResponseHandler {
             }
             case REMOVE_PAYMENT_METHOD -> {
                 String[] split = messageText.split(":");
-                Exchange exchange = Exchange.fromString(split[0]);
-                PaymentMethod paymentMethod = PaymentMethod.fromString(split[1]);
+                ExchangeEnum exchange = ExchangeEnum.fromString(split[0]);
+                PaymentMethodEnum paymentMethod = PaymentMethodEnum.fromString(split[1]);
                 switch (exchange) {
                     case BINANCE -> {
                         binanceService.getPaymentMethods().remove(paymentMethod);
@@ -180,12 +180,12 @@ public class ResponseHandler {
 
     private ReplyKeyboard getExchanges(boolean isAdd) {
         KeyboardRow row = new KeyboardRow();
-        Collection<Exchange> selectedExchanges = exchangeSubscriberService.getAllExchanges();
+        Collection<ExchangeEnum> selectedExchanges = exchangeSubscriberService.getAllExchanges();
         if (!isAdd) {
             selectedExchanges.stream().map(Enum::name).forEach(row::add);
         } else {
             // add all exchanges that are not in selectedExchanges
-            for (Exchange exchange : Exchange.values()) {
+            for (ExchangeEnum exchange : ExchangeEnum.values()) {
                 if (!selectedExchanges.contains(exchange)) {
                     row.add(exchange.name());
                 }
@@ -195,9 +195,9 @@ public class ResponseHandler {
         return new ReplyKeyboardMarkup(List.of(row));
     }
 
-    private ReplyKeyboard getPaymentMethods(boolean isAdd, Exchange exchange) {
+    private ReplyKeyboard getPaymentMethods(boolean isAdd, ExchangeEnum exchange) {
         List<KeyboardRow> rows = new ArrayList<>();
-        Collection<PaymentMethod> selectedPaymentMethods = exchange.equals(Exchange.BINANCE) ? binanceService.getPaymentMethods() : bybitService.getPaymentMethods();
+        Collection<PaymentMethodEnum> selectedPaymentMethods = exchange.equals(ExchangeEnum.BINANCE) ? binanceService.getPaymentMethods() : bybitService.getPaymentMethods();
         if (!isAdd) {
             selectedPaymentMethods.stream().map(Enum::name).filter(str -> !str.contains("SEPA")).forEach(str ->{
                 KeyboardRow row = new KeyboardRow();
@@ -206,17 +206,17 @@ public class ResponseHandler {
             });
         } else {
             // add all exchanges that are not in selectedExchanges
-            if (exchange.equals(Exchange.BINANCE)) {
-                for (PaymentMethod paymentMethod : PaymentMethod.values()) {
-                    if (!selectedPaymentMethods.contains(paymentMethod) && !paymentMethod.name().contains("SEPA") && !paymentMethod.equals(PaymentMethod.WISE)) {
+            if (exchange.equals(ExchangeEnum.BINANCE)) {
+                for (PaymentMethodEnum paymentMethod : PaymentMethodEnum.values()) {
+                    if (!selectedPaymentMethods.contains(paymentMethod) && !paymentMethod.name().contains("SEPA") && !paymentMethod.equals(PaymentMethodEnum.WISE)) {
                         KeyboardRow row = new KeyboardRow();
                         row.add(exchange + ":" + paymentMethod.name());
                         rows.add(row);
                     }
                 }
             } else {
-                for (PaymentMethod paymentMethod : PaymentMethod.values()) {
-                    if (!selectedPaymentMethods.contains(paymentMethod) && (paymentMethod.equals(PaymentMethod.WISE) || paymentMethod.equals(PaymentMethod.SkrillMoneybookers))) {
+                for (PaymentMethodEnum paymentMethod : PaymentMethodEnum.values()) {
+                    if (!selectedPaymentMethods.contains(paymentMethod) && (paymentMethod.equals(PaymentMethodEnum.WISE) || paymentMethod.equals(PaymentMethodEnum.SkrillMoneybookers))) {
                         KeyboardRow row = new KeyboardRow();
                         row.add(exchange + ":" + paymentMethod.name());
                         rows.add(row);

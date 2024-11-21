@@ -1,6 +1,6 @@
 package bot.dao;
 
-import bot.data.Exchange;
+import bot.data.ExchangeEnum;
 import bot.data.entity.Client;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -11,9 +11,9 @@ import java.util.Optional;
 
 @Repository
 public interface ClientRepository extends JpaRepository<Client, String> {
-    Optional<Client> findByExchangeAndId(Exchange exchange, String id);
+    Optional<Client> findByExchangeAndId(ExchangeEnum exchange, String id);
     List<Client> findByTimeToDelete(LocalDateTime timeToDelete);
-    List<Client> findByExchange(Exchange exchange);
+    List<Client> findByExchange(ExchangeEnum exchange);
     List<Client> findByTimeToDeleteBefore(LocalDateTime timeToDelete);
-    void deleteAllByExchange(Exchange exchange);
+    void deleteAllByExchange(ExchangeEnum exchange);
 }

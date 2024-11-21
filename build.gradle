@@ -33,7 +33,7 @@ dependencies {
     implementation 'org.telegram:telegrambots-spring-boot-starter:6.7.0'
     implementation 'org.telegram:telegrambots-abilities:6.7.0'
     implementation 'com.google.guava:guava:33.2.1-jre'
-
+    implementation 'org.flywaydb:flyway-core:8.0.3'
 
     implementation 'com.zaxxer:HikariCP:4.0.3'
     implementation 'org.postgresql:postgresql:42.3.8'

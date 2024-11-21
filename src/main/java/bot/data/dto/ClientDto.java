@@ -1,6 +1,6 @@
 package bot.data.dto;
 
-import bot.data.Exchange;
+import bot.data.ExchangeEnum;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import lombok.ToString;
@@ -16,7 +16,7 @@ public class ClientDto {
     @NotEmpty(message = "Ох ты сука и ебало, ты id забыл долбаеб")
     private String id;
     @NotNull(message = "Фу сука как можно быть таким дауном и забыть exchange")
-    private Exchange exchange;
+    private ExchangeEnum exchange;
     @Future(message = "Ты че долбаеб? Время должно быть в будущем")
     @NotNull(message = "Ты че долбаеб? Кто будет timeToDelete передавать?")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm")

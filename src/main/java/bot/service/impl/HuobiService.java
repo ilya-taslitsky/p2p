@@ -2,7 +2,7 @@ package bot.service.impl;
 
 import bot.dao.HuobiClient;
 import bot.data.*;
-import bot.data.Currency;
+import bot.data.CurrencyEnum;
 import bot.data.exchangedata.huobi.Data;
 import bot.service.ExchangeService;
 import com.google.common.collect.Multimap;
@@ -31,13 +31,13 @@ public class HuobiService implements ExchangeService {
     }
 
     @Override
-    public Map<String, String> getAvailableOrderUrls(P2PRequest request, Filter filter, Multimap<Exchange, String> userIdCache, Multimap<Exchange, String> foundUserIds) {
+    public Map<String, String> getAvailableOrderUrls(P2PRequest request, Filter filter, Multimap<ExchangeEnum, String> userIdCache, Multimap<ExchangeEnum, String> foundUserIds) {
         List<P2PResponse> responses = new ArrayList<>();
         Map<String, String> foundOrderUrls = new HashMap<>();
         List<Data> items;
         int page = 1;
         do {
-            int huobiValue = Currency.fromString(request.getCurrencyId()).getHuobiValue();
+            int huobiValue = CurrencyEnum.fromString(request.getCurrencyId()).getHuobiValue();
             String urlWithParams = String.format(baseUrl, huobiValue, page);
             items = huobiClient.findOrdersWithFilter(urlWithParams);
             if(items == null) {
@@ -50,10 +50,10 @@ public class HuobiService implements ExchangeService {
         List<P2PResponse> processResponses = processResponses(responses, filter);
 
         processResponses.stream()
-                .filter(item -> !userIdCache.containsEntry(Exchange.HUOBI, item.getUserId()))
+                .filter(item -> !userIdCache.containsEntry(ExchangeEnum.HUOBI, item.getUserId()))
                 .forEach(item -> {
-                    userIdCache.put(Exchange.HUOBI, item.getUserId());
-                    foundUserIds.put(Exchange.HUOBI, item.getUserId());
+                    userIdCache.put(ExchangeEnum.HUOBI, item.getUserId());
+                    foundUserIds.put(ExchangeEnum.HUOBI, item.getUserId());
                     foundOrderUrls.put(String.format(Links.HUOBI_MERCHANT_URL, item.getUserId()), item.getUserId());
                 });
         return foundOrderUrls;

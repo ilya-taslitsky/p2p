@@ -1,7 +1,7 @@
 package bot.service.impl;
 
 import bot.data.*;
-import bot.data.Currency;
+import bot.data.CurrencyEnum;
 import bot.data.entity.Client;
 import bot.exception.NotFoundException;
 import bot.service.ExchangeService;
@@ -28,7 +28,7 @@ import java.util.*;
 public class P2PServiceImpl implements P2PService {
     private final ExchangeSubscriberService exchangeSubscriberService;
     private final ClientService clientService;
-    private final Multimap<Exchange, String> userIdCache = ArrayListMultimap.create();
+    private final Multimap<ExchangeEnum, String> userIdCache = ArrayListMultimap.create();
     private final AppContext appContext;
     private StringBuilder urlCache = new StringBuilder();
 
@@ -37,12 +37,12 @@ public class P2PServiceImpl implements P2PService {
     @Async
     public void parseOrders(P2PRequest request, Filter filter) {
         StringBuilder foundOrderUrls = new StringBuilder(urlCache);
-        Multimap<Exchange, String> foundOrderIds = ArrayListMultimap.create();
+        Multimap<ExchangeEnum, String> foundOrderIds = ArrayListMultimap.create();
         Map<String, String> newFoundOrderUrls = new HashMap<>();
 
         Collection<ExchangeService> exchangeServices = exchangeSubscriberService.getAllSubscribers();
 
-        for (Currency currency : Currency.values()) {
+        for (CurrencyEnum currency : CurrencyEnum.values()) {
             request.setCurrencyId(currency.name());
             for(ExchangeService exchangeService : exchangeServices) {
                 Map<String, String> availableOrderUrls = exchangeService.getAvailableOrderUrls(request, filter, userIdCache, foundOrderIds);
@@ -96,10 +96,10 @@ public class P2PServiceImpl implements P2PService {
         log.info("Populating foundUserIds from DB: " + userIdCache);
     }
 
-    private void persistNewClients(Multimap<Exchange, String> foundUserIds) {
+    private void persistNewClients(Multimap<ExchangeEnum, String> foundUserIds) {
         List<Client> newClients = new ArrayList<>();
 
-        for (Exchange exchange : foundUserIds.keySet()) {
+        for (ExchangeEnum exchange : foundUserIds.keySet()) {
             for (String id : foundUserIds.get(exchange)) {
                 newClients.add(new Client(id, exchange));
             }
@@ -110,7 +110,7 @@ public class P2PServiceImpl implements P2PService {
         clientService.saveAll(newClients);
     }
 
-    public void deleteByExchangeAndId(Exchange exchange, String id) {
+    public void deleteByExchangeAndId(ExchangeEnum exchange, String id) {
         userIdCache.remove(exchange, id);
         boolean isDeleted = clientService.deleteByExchangeAndId(exchange, id);
         if (!isDeleted) {
@@ -122,7 +122,7 @@ public class P2PServiceImpl implements P2PService {
 
     @Transactional
     @Modifying
-    public void deleteByExchange(Exchange exchange) {
+    public void deleteByExchange(ExchangeEnum exchange) {
         userIdCache.removeAll(exchange);
         clientService.deleteByExchange(exchange);
         log.info("All clients from {} deleted", exchange);

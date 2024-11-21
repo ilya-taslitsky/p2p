@@ -1,6 +1,6 @@
 package bot.controller;
 
-import bot.data.Exchange;
+import bot.data.ExchangeEnum;
 import bot.data.FilterRequest;
 import bot.service.ExchangeSubscriberService;
 import bot.service.P2PScheduler;
@@ -36,14 +36,14 @@ public class BotController {
     @PutMapping("/exchanges/{exchange}")
     public ResponseEntity<String> addExchange(@PathVariable String exchange) {
         log.info("Triggered endpoint /exchanges/{}", exchange);
-        exchangeSubscriberService.subscribe(Exchange.fromString(exchange));
+        exchangeSubscriberService.subscribe(ExchangeEnum.fromString(exchange));
         return ResponseEntity.ok("Exchange added");
     }
 
     @DeleteMapping("/exchanges/{exchange}")
     public ResponseEntity<String> deleteExchange(@PathVariable String exchange) {
         log.info("Triggered endpoint /exchanges/{}", exchange);
-        exchangeSubscriberService.unsubscribe(Exchange.fromString(exchange));
+        exchangeSubscriberService.unsubscribe(ExchangeEnum.fromString(exchange));
         return ResponseEntity.ok("Exchange removed");
     }
 

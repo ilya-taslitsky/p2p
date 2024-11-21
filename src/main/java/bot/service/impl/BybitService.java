@@ -19,18 +19,18 @@ import java.util.*;
 public class BybitService implements ExchangeService {
     private final BybitClient bybitClient;
     @Getter
-    private List<PaymentMethod> paymentMethods = new ArrayList<>();
+    private List<PaymentMethodEnum> paymentMethods = new ArrayList<>();
 
     @PostConstruct
     public void init() {
-        paymentMethods.add(PaymentMethod.WISE);
+        paymentMethods.add(PaymentMethodEnum.WISE);
     }
 
-    private List<P2PResponse> processResponses(List<P2PResponse> items, Filter filter, Multimap<Exchange, String> userIdCache) {
+    private List<P2PResponse> processResponses(List<P2PResponse> items, Filter filter, Multimap<ExchangeEnum, String> userIdCache) {
         double lastQuantity = filter.getLastQuantity() == null ? 0 : filter.getLastQuantity();
         return items.stream()
                 .filter(
-                        item -> !userIdCache.containsEntry(Exchange.BYBIT, item.getUserId())
+                        item -> !userIdCache.containsEntry(ExchangeEnum.BYBIT, item.getUserId())
                         && item.getAuthStatus() == 2
                         && item.getCompleteOrderRate() == 0
                         && item.getPayments().size() <= filter.getPaymentsCount()
@@ -42,10 +42,10 @@ public class BybitService implements ExchangeService {
     }
 
     @Override
-    public Map<String, String> getAvailableOrderUrls(P2PRequest request, Filter filter, Multimap<Exchange, String> userIdCache,  Multimap<Exchange, String> foundUserIds) {
+    public Map<String, String> getAvailableOrderUrls(P2PRequest request, Filter filter, Multimap<ExchangeEnum, String> userIdCache, Multimap<ExchangeEnum, String> foundUserIds) {
         List<P2PResponse> responses = new ArrayList<>();
         Map<String, String> foundOrderUrls = new HashMap<>();
-        request.setPayment(paymentMethods.stream().map(PaymentMethod::getBybitValue).toList());
+        request.setPayment(paymentMethods.stream().map(PaymentMethodEnum::getBybitValue).toList());
         List<Item> items;
         int page = 1;
         do {
@@ -62,8 +62,8 @@ public class BybitService implements ExchangeService {
 
         processResponses
                 .forEach(item -> {
-                    userIdCache.put(Exchange.BYBIT, item.getUserId());
-                    foundUserIds.put(Exchange.BYBIT, item.getUserId());
+                    userIdCache.put(ExchangeEnum.BYBIT, item.getUserId());
+                    foundUserIds.put(ExchangeEnum.BYBIT, item.getUserId());
                     foundOrderUrls.put(String.format(Links.BYBIT_MERCHANT_URL, item.getUserId(), request.getCurrencyId()), item.getUserId());
                 });
         return foundOrderUrls;

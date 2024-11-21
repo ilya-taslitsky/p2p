@@ -26,7 +26,7 @@ public class BinanceService implements ExchangeService {
     private final BinanceClient binanceClient;
     private final ObjectMapper objectMapper;
     @Getter
-    private List<PaymentMethod> paymentMethods = new ArrayList<>();
+    private List<PaymentMethodEnum> paymentMethods = new ArrayList<>();
     private final List<String> fiats = List.of("BTC", "USDT", "USDC");
     private Pattern wisePattern = Pattern.compile("(?i)w[\\W_]*i[\\W_]*s[\\W_]*e(?![\\W_]*other)");
     private Pattern revoPattern = Pattern.compile("(?i)r[\\W_]*e[\\W_]*v[\\W_]*o([\\W_]*l[\\W_]*u[\\W_]*t[\\W_]*e)?");
@@ -35,19 +35,21 @@ public class BinanceService implements ExchangeService {
 
     @PostConstruct
     public void init() {
-        paymentMethods.add(PaymentMethod.BANK);
+        paymentMethods.add(PaymentMethodEnum.BANK);
     }
-    private List<DataItem> processResponses(List<DataItem> items, Filter filter, Multimap<Exchange, String> userIdCache) {
+
+    private List<DataItem> processResponses(List<DataItem> items, Filter filter, Multimap<ExchangeEnum, String> userIdCache) {
         double lastQuantity = filter.getLastQuantity() == null ? 0 : filter.getLastQuantity();
         return items.stream()
                 .filter(item -> {
-                    if (userIdCache.containsEntry(Exchange.BINANCE, item.getAdvertiser().getUserNo())) {
+                    if (userIdCache.containsEntry(ExchangeEnum.BINANCE, item.getAdvertiser().getUserNo())) {
                         return false;
                     }
                     boolean isOkBeforeOrdersCheck =
                     item.getAdv().getTradeMethods().size() <= filter.getPaymentsCount()
                             && item.getAdvertiser().getMonthOrderCount() <= filter.getRecentOrderNum()
                             && Double.parseDouble(item.getAdv().getTradableQuantity()) <= filter.getMaxAmount()
+                            && item.getAdvertiser().getUserGrade() < 3
                             && Double.parseDouble(item.getAdv().getTradableQuantity()) >= lastQuantity;
                     if (!isOkBeforeOrdersCheck) {
                         return false;
@@ -67,31 +69,29 @@ public class BinanceService implements ExchangeService {
                     }
                 })
                 .toList();
-
-
     }
 
     @Override
-    public Map<String, String> getAvailableOrderUrls(P2PRequest request, Filter filter, Multimap<Exchange, String> userIdCache, Multimap<Exchange, String> foundUserIds) {
+    public Map<String, String> getAvailableOrderUrls(P2PRequest request, Filter filter, Multimap<ExchangeEnum, String> userIdCache, Multimap<ExchangeEnum, String> foundUserIds) {
         Map<String, String> foundOrderUrls = new HashMap<>();
         // TODO: refactor this shit
         BinanceRequest binanceRequest = new BinanceRequest();
         List<String> payTypes = binanceRequest.getPayTypes();
-        if (request.getCurrencyId().equals("USD") && paymentMethods.contains(PaymentMethod.Zelle)) {
-            payTypes.add(PaymentMethod.Zelle.name());
+        if (request.getCurrencyId().equals("USD") && paymentMethods.contains(PaymentMethodEnum.Zelle)) {
+            payTypes.add(PaymentMethodEnum.Zelle.name());
         }
-        if (paymentMethods.contains(PaymentMethod.BANK)) {
-            payTypes.add(PaymentMethod.BANK.name());
+        if (paymentMethods.contains(PaymentMethodEnum.BANK)) {
+            payTypes.add(PaymentMethodEnum.BANK.name());
         }
         if (request.getCurrencyId().equals("EUR")) {
-            payTypes.add(PaymentMethod.SEPAinstant.name());
-            payTypes.add(PaymentMethod.SEPA.name());
-            if (paymentMethods.contains(PaymentMethod.ZEN)) {
-                payTypes.add(PaymentMethod.ZEN.name());
+            payTypes.add(PaymentMethodEnum.SEPAinstant.name());
+            payTypes.add(PaymentMethodEnum.SEPA.name());
+            if (paymentMethods.contains(PaymentMethodEnum.ZEN)) {
+                payTypes.add(PaymentMethodEnum.ZEN.name());
             }
         }
-        if (paymentMethods.contains(PaymentMethod.SkrillMoneybookers)) {
-            payTypes.add(PaymentMethod.SkrillMoneybookers.name());
+        if (paymentMethods.contains(PaymentMethodEnum.SkrillMoneybookers)) {
+            payTypes.add(PaymentMethodEnum.SkrillMoneybookers.name());
         }
 
         binanceRequest.setFiat(request.getCurrencyId());
@@ -116,8 +116,8 @@ public class BinanceService implements ExchangeService {
 
             processResponses
                     .forEach(item -> {
-                        userIdCache.put(Exchange.BINANCE, item.getAdvertiser().getUserNo());
-                        foundUserIds.put(Exchange.BINANCE, item.getAdvertiser().getUserNo());
+                        userIdCache.put(ExchangeEnum.BINANCE, item.getAdvertiser().getUserNo());
+                        foundUserIds.put(ExchangeEnum.BINANCE, item.getAdvertiser().getUserNo());
                         Matcher wiseMatcher = wisePattern.matcher(item.getAdvertiser().getNickName());
                         Matcher revoMatcher = revoPattern.matcher(item.getAdvertiser().getNickName());
                         boolean isWiseFound = false;

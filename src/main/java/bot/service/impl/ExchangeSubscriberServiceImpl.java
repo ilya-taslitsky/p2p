@@ -1,6 +1,6 @@
 package bot.service.impl;
 
-import bot.data.Exchange;
+import bot.data.ExchangeEnum;
 import bot.exception.NotFoundException;
 import bot.service.ExchangeService;
 import bot.service.ExchangeSubscriberService;
@@ -17,18 +17,18 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 @Slf4j
 public class ExchangeSubscriberServiceImpl implements ExchangeSubscriberService, ApplicationContextAware {
-    private Map<Exchange, ExchangeService> exchangeServices = new ConcurrentHashMap<>();
+    private Map<ExchangeEnum, ExchangeService> exchangeServices = new ConcurrentHashMap<>();
     private ApplicationContext applicationContext;
 
     @PostConstruct
     public void init() {
-        exchangeServices.put(Exchange.BYBIT, applicationContext.getBean(Exchange.BYBIT.name(), ExchangeService.class));
-        exchangeServices.put(Exchange.BINANCE, applicationContext.getBean(Exchange.BINANCE.name(), ExchangeService.class));
+        exchangeServices.put(ExchangeEnum.BYBIT, applicationContext.getBean(ExchangeEnum.BYBIT.name(), ExchangeService.class));
+        exchangeServices.put(ExchangeEnum.BINANCE, applicationContext.getBean(ExchangeEnum.BINANCE.name(), ExchangeService.class));
         log.info("ExchangeSubscriberService initialized with default exchange: BYBIT, BINANCE");
     }
 
     @Override
-    public void subscribe(Exchange exchange) {
+    public void subscribe(ExchangeEnum exchange) {
         if (exchangeServices.containsKey(exchange)) {
             throw new NotFoundException("Долбаеб, эта биржа уже подключена");
         }
@@ -38,7 +38,7 @@ public class ExchangeSubscriberServiceImpl implements ExchangeSubscriberService,
     }
 
     @Override
-    public void unsubscribe(Exchange exchange) {
+    public void unsubscribe(ExchangeEnum exchange) {
         if (exchangeServices.remove(exchange) == null) {
            throw new NotFoundException("Долбаеб, эта биржа и так не подключена");
         }
@@ -51,7 +51,7 @@ public class ExchangeSubscriberServiceImpl implements ExchangeSubscriberService,
     }
 
     @Override
-    public Collection<Exchange> getAllExchanges() {
+    public Collection<ExchangeEnum> getAllExchanges() {
         return exchangeServices.keySet();
     }
 

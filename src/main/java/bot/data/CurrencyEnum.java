@@ -1,7 +1,7 @@
 package bot.data;
 
 
-public enum Currency {
+public enum CurrencyEnum {
     AUD(7),
     CAD(6),
     CZK(37),
@@ -14,7 +14,7 @@ public enum Currency {
     EUR(14);
     private final int huobiValue;
 
-    Currency(int huobiValue) {
+    CurrencyEnum(int huobiValue) {
         this.huobiValue = huobiValue;
     }
 
@@ -22,8 +22,8 @@ public enum Currency {
         return huobiValue;
     }
 
-    public static Currency fromString(String currency) {
-        for (Currency c : Currency.values()) {
+    public static CurrencyEnum fromString(String currency) {
+        for (CurrencyEnum c : CurrencyEnum.values()) {
             if (c.name().equalsIgnoreCase(currency)) {
                 return c;
             }

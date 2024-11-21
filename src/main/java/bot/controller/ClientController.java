@@ -1,7 +1,7 @@
 package bot.controller;
 
 import bot.data.ClientListDto;
-import bot.data.Exchange;
+import bot.data.ExchangeEnum;
 import bot.data.dto.ClientDto;
 import bot.data.entity.Client;
 import bot.service.ClientService;
@@ -22,13 +22,13 @@ public class ClientController {
     private final ClientService clientService;
 
     @GetMapping("/{exchange}/{id}")
-    public ResponseEntity<Client> findClientByIdAndExchange(@PathVariable Exchange exchange, @PathVariable String id) {
+    public ResponseEntity<Client> findClientByIdAndExchange(@PathVariable ExchangeEnum exchange, @PathVariable String id) {
         log.info("Triggered endpoint /clients/{}", id);
         return ResponseEntity.ok(clientService.findByIdAndExchange(id, exchange));
     }
 
     @DeleteMapping("/{exchange}/{id}")
-    public ResponseEntity<String> deleteClient(@PathVariable Exchange exchange, @PathVariable String id) {
+    public ResponseEntity<String> deleteClient(@PathVariable ExchangeEnum exchange, @PathVariable String id) {
         log.info("Triggered endpoint /clients/{}/{}", exchange, id);
         p2PService.deleteByExchangeAndId(exchange, id);
         return ResponseEntity.ok("Client deleted");
@@ -41,7 +41,7 @@ public class ClientController {
     }
 
     @GetMapping("/{exchange}")
-    public ResponseEntity<ClientListDto> getClientsByExchange(@PathVariable Exchange exchange) {
+    public ResponseEntity<ClientListDto> getClientsByExchange(@PathVariable ExchangeEnum exchange) {
         log.info("Triggered endpoint /clients/{}", exchange);
         return ResponseEntity.ok(ClientListDto.of(clientService.findAllByExchange(exchange)));
     }
@@ -60,7 +60,7 @@ public class ClientController {
     }
 
     @DeleteMapping("/{exchange}")
-    public ResponseEntity<String> deleteClientsByExchange(@PathVariable Exchange exchange) {
+    public ResponseEntity<String> deleteClientsByExchange(@PathVariable ExchangeEnum exchange) {
         log.info("Triggered endpoint /clients/{}", exchange);
         p2PService.deleteByExchange(exchange);
         return ResponseEntity.ok("Clients deleted by exchange: " + exchange);

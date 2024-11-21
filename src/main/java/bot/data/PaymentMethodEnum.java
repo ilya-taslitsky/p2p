@@ -1,10 +1,10 @@
 package bot.data;
 
-public enum PaymentMethod {
+public enum PaymentMethodEnum {
     BANK("bank"), Zelle("Zelle"), SEPA("Sepa"), SEPAinstant("SepaInstant"), ZEN("Zen"), SkrillMoneybookers("162"), WISE("78");
     private final String bybitValue;
 
-    PaymentMethod(String bybitValue) {
+    PaymentMethodEnum(String bybitValue) {
         this.bybitValue = bybitValue;
     }
 
@@ -12,7 +12,7 @@ public enum PaymentMethod {
         return bybitValue;
     }
 
-    public static PaymentMethod fromString(String paymentMethod) {
-        return PaymentMethod.valueOf(paymentMethod);
+    public static PaymentMethodEnum fromString(String paymentMethod) {
+        return PaymentMethodEnum.valueOf(paymentMethod);
     }
 }

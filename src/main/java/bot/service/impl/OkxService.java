@@ -22,11 +22,11 @@ public class OkxService implements ExchangeService {
     private final OkxClient okxClient;
     private final Mapper mapper;
 
-    public List<P2PResponse> processResponses(List<P2PResponse> items, Filter filter, Multimap<Exchange, String> userIdCache) {
+    public List<P2PResponse> processResponses(List<P2PResponse> items, Filter filter, Multimap<ExchangeEnum, String> userIdCache) {
         double lastQuantity = filter.getLastQuantity() == null ? 0 : filter.getLastQuantity();
         return items.stream()
                 .filter(
-                        item -> !userIdCache.containsEntry(Exchange.BYBIT, item.getUserId())
+                        item -> !userIdCache.containsEntry(ExchangeEnum.BYBIT, item.getUserId())
                         && item.getAuthStatus() == 2
                         && item.getPremium().equals("0")
                         && item.getCompleteOrderRate() == 0
@@ -40,7 +40,7 @@ public class OkxService implements ExchangeService {
     }
 
     @Override
-    public Map<String, String> getAvailableOrderUrls(P2PRequest request, Filter filter, Multimap<Exchange, String> userIdCache, Multimap<Exchange, String> foundUserIds) {
+    public Map<String, String> getAvailableOrderUrls(P2PRequest request, Filter filter, Multimap<ExchangeEnum, String> userIdCache, Multimap<ExchangeEnum, String> foundUserIds) {
         Map<String, String> foundOrderUrls = new HashMap<>();
         OkxRequest okxRequest = mapper.mapToOkxRequest(request);
         String urlWithParams = String.format(baseUrl, okxRequest.getCryptoCurrency(), okxRequest.getCurrency(), okxRequest.getTimestamp());
@@ -48,8 +48,8 @@ public class OkxService implements ExchangeService {
         List<P2PResponse> processResponses = processResponses(responses, filter, userIdCache);
         processResponses
                 .forEach(item -> {
-                    userIdCache.put(Exchange.OKX,item.getUserId());
-                    foundUserIds.put(Exchange.OKX, item.getUserId());
+                    userIdCache.put(ExchangeEnum.OKX,item.getUserId());
+                    foundUserIds.put(ExchangeEnum.OKX, item.getUserId());
                     foundOrderUrls.put(String.format(Links.OKX_MERCHANT_URL, item.getUserId()), item.getUserId());
                 });
         return foundOrderUrls;

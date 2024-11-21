@@ -1,6 +1,6 @@
 package bot.service.impl;
 
-import bot.data.Exchange;
+import bot.data.ExchangeEnum;
 import bot.data.entity.Client;
 import bot.dao.ClientRepository;
 import bot.exception.NotFoundException;
@@ -24,7 +24,7 @@ public class ClientServiceImpl implements ClientService {
     private final ClientRepository clientDao;
 
     @Override
-    public Client findByIdAndExchange(String id, Exchange exchange) {
+    public Client findByIdAndExchange(String id, ExchangeEnum exchange) {
         log.info("Find client by ID: {} and exchange: {}", id, exchange);
         return clientDao.findByExchangeAndId(exchange, id).orElseThrow(() -> {
             log.warn("Client not found by ID: {} and exchange: {}", id, exchange);
@@ -48,7 +48,7 @@ public class ClientServiceImpl implements ClientService {
     @Override
     @Transactional
     @Modifying
-    public boolean deleteByExchangeAndId(Exchange exchange, String id) {
+    public boolean deleteByExchangeAndId(ExchangeEnum exchange, String id) {
         log.info("Delete client by exchange: {} and ID: {}", exchange, id);
         Optional<Client> clientOptional = clientDao.findByExchangeAndId(exchange, id);
         if (clientOptional.isEmpty()) {
@@ -92,7 +92,7 @@ public class ClientServiceImpl implements ClientService {
     }
 
     @Override
-    public List<Client> findAllByExchange(Exchange exchange) {
+    public List<Client> findAllByExchange(ExchangeEnum exchange) {
         List<Client> clients = clientDao.findByExchange(exchange);
         clients.sort(Comparator.comparing(Client::getCreationTime, Comparator.nullsFirst(Comparator.naturalOrder())));
         return clients;
@@ -111,7 +111,7 @@ public class ClientServiceImpl implements ClientService {
     @Override
     @Transactional
     @Modifying
-    public void deleteByExchange(Exchange exchange) {
+    public void deleteByExchange(ExchangeEnum exchange) {
         log.info("Delete all clients by exchange: {}", exchange);
         clientDao.deleteAllByExchange(exchange);
     }
