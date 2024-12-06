@@ -133,7 +133,7 @@ public class ResponseHandler {
     public boolean sendOrders(String text) {
         AtomicBoolean isSent = new AtomicBoolean(true);
         chatStates.forEach((chatId, state) -> {
-            if (state.equals(UserState.AUTHENTICATED)) {
+            if (!state.equals(UserState.NOT_AUTHENTICATED)) {
                 Optional<Message> execute = sendMessage(chatId, text);
                 if (execute.isEmpty()) {
                     isSent.set(false);
@@ -216,7 +216,7 @@ public class ResponseHandler {
                 }
             } else {
                 for (PaymentMethod paymentMethod : PaymentMethod.values()) {
-                    if (!selectedPaymentMethods.contains(paymentMethod) && (paymentMethod.equals(PaymentMethod.WISE) || paymentMethod.equals(PaymentMethod.SkrillMoneybookers))) {
+                    if (!selectedPaymentMethods.contains(paymentMethod) && (paymentMethod.equals(PaymentMethod.WISE) || paymentMethod.equals(PaymentMethod.SkrillMoneybookers) || paymentMethod.equals(PaymentMethod.AirTM) || paymentMethod.equals(PaymentMethod.Zinli))) {
                         KeyboardRow row = new KeyboardRow();
                         row.add(exchange + ":" + paymentMethod.name());
                         rows.add(row);

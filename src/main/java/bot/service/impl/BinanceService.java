@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -29,9 +30,8 @@ public class BinanceService implements ExchangeService {
     private List<PaymentMethod> paymentMethods = new ArrayList<>();
     private final List<String> fiats = List.of("BTC", "USDT", "USDC");
     private Pattern wisePattern = Pattern.compile("(?i)w[\\W_]*i[\\W_]*s[\\W_]*e(?![\\W_]*other)");
-    private Pattern revoPattern = Pattern.compile("(?i)r[\\W_]*e[\\W_]*v[\\W_]*o([\\W_]*l[\\W_]*u[\\W_]*t[\\W_]*e)?");
     private String wiseSiren = "\uD83D\uDEA8 WISE \uD83D\uDEA8 \n";
-    private String revoSiren = "\uD83D\uDEA8 REVOLUT \uD83D\uDEA8 \n";
+    private String zinlSiren = "\uD83D\uDEA8 ZINLI \uD83D\uDEA8 \n";
 
     @PostConstruct
     public void init() {
@@ -77,23 +77,34 @@ public class BinanceService implements ExchangeService {
         // TODO: refactor this shit
         BinanceRequest binanceRequest = new BinanceRequest();
         List<String> payTypes = binanceRequest.getPayTypes();
-        if (request.getCurrencyId().equals("USD") && paymentMethods.contains(PaymentMethod.Zelle)) {
-            payTypes.add(PaymentMethod.Zelle.name());
+        if (request.getCurrencyId().equals("USD")) {
+            if (paymentMethods.contains(PaymentMethod.Zelle)) {
+                payTypes.add(PaymentMethod.Zelle.name());
+            }
+            if (paymentMethods.contains(PaymentMethod.Zinli)) {
+                payTypes.add(PaymentMethod.Zinli.name());
+            }
         }
         if (paymentMethods.contains(PaymentMethod.BANK)) {
             payTypes.add(PaymentMethod.BANK.name());
-        }
-        if (request.getCurrencyId().equals("EUR")) {
-            payTypes.add(PaymentMethod.SEPAinstant.name());
-            payTypes.add(PaymentMethod.SEPA.name());
-            if (paymentMethods.contains(PaymentMethod.ZEN)) {
-                payTypes.add(PaymentMethod.ZEN.name());
+            if (request.getCurrencyId().equals("EUR")) {
+                payTypes.add(PaymentMethod.SEPAinstant.name());
+                payTypes.add(PaymentMethod.SEPA.name());
+//                if (paymentMethods.contains(PaymentMethod.ZEN)) {
+//                    payTypes.add(PaymentMethod.ZEN.name());
+//                }
             }
+        }
+        if (paymentMethods.contains(PaymentMethod.AirTM)) {
+            payTypes.add(PaymentMethod.AirTM.name());
         }
         if (paymentMethods.contains(PaymentMethod.SkrillMoneybookers)) {
             payTypes.add(PaymentMethod.SkrillMoneybookers.name());
         }
 
+        if (payTypes.isEmpty()) {
+            return foundOrderUrls;
+        }
         binanceRequest.setFiat(request.getCurrencyId());
         for (String fiat : fiats) {
             binanceRequest.setAsset(fiat);
@@ -119,24 +130,24 @@ public class BinanceService implements ExchangeService {
                         userIdCache.put(Exchange.BINANCE, item.getAdvertiser().getUserNo());
                         foundUserIds.put(Exchange.BINANCE, item.getAdvertiser().getUserNo());
                         Matcher wiseMatcher = wisePattern.matcher(item.getAdvertiser().getNickName());
-                        Matcher revoMatcher = revoPattern.matcher(item.getAdvertiser().getNickName());
+                        AtomicBoolean isZinliFound = new AtomicBoolean(false);
+                        item.getAdv().getTradeMethods().forEach(tradeMethod -> {
+                           if ( tradeMethod.getPayType().equals(PaymentMethod.Zinli.name())) {
+                               isZinliFound.set(true);
+                           }
+                        });
                         boolean isWiseFound = false;
-                        boolean isRevoFound = false;
                         if (wiseMatcher.find()) {
                             isWiseFound = true;
-                        } else if(revoMatcher.find()) {
-                            isRevoFound = true;
-                        } else {
+                        }
+                        else if (!isZinliFound.get()){
                             String userDetails = binanceClient.getUserDetails(item.getAdv().getAdvNo());
                             try {
                                 JsonNode rootNode = objectMapper.readTree(userDetails);
                                 String remarks = rootNode.at("/data/remarks").asText();
                                 wiseMatcher = wisePattern.matcher(remarks);
-                                revoMatcher = revoPattern.matcher(remarks);
                                 if (wiseMatcher.find()) {
                                     isWiseFound = true;
-                                } else if(revoMatcher.find()) {
-                                    isRevoFound = true;
                                 }
                             } catch (JsonProcessingException e) {
                                log.warn("Failed to parse order remarks response", e);
@@ -146,8 +157,8 @@ public class BinanceService implements ExchangeService {
                         if (isWiseFound) {
                             url = wiseSiren + url;
                         }
-                        if (isRevoFound) {
-                            url = revoSiren + url;
+                        if (isZinliFound.get()) {
+                            url = zinlSiren + url;
                         }
                         foundOrderUrls.put(url, item.getAdvertiser().getUserNo());
                     });

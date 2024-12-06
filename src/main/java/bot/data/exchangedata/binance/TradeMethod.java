@@ -2,10 +2,12 @@ package bot.data.exchangedata.binance;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
+import lombok.Getter;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
-class TradeMethod {
+
+public class TradeMethod {
     private String payId;
     private String payMethodId;
     private String payType;

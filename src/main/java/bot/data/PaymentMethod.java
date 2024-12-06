@@ -1,7 +1,7 @@
 package bot.data;
 
 public enum PaymentMethod {
-    BANK("bank"), Zelle("Zelle"), SEPA("Sepa"), SEPAinstant("SepaInstant"), ZEN("Zen"), SkrillMoneybookers("162"), WISE("78");
+    BANK("bank"), Zelle("Zelle"), SEPA("Sepa"), SEPAinstant("SepaInstant"), SkrillMoneybookers("162"), WISE("78"), AirTM("7"), Zinli("189");
     private final String bybitValue;
 
     PaymentMethod(String bybitValue) {
