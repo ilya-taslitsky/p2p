@@ -32,6 +32,7 @@ public class BinanceService implements ExchangeService {
     private Pattern wisePattern = Pattern.compile("(?i)w[\\W_]*i[\\W_]*s[\\W_]*e(?![\\W_]*other)");
     private String wiseSiren = "\uD83D\uDEA8 WISE \uD83D\uDEA8 \n";
     private String zinlSiren = "\uD83D\uDEA8 ZINLI \uD83D\uDEA8 \n";
+    private String airtmSiren = "\uD83D\uDEA8 AirTM \uD83D\uDEA8 \n";
 
     @PostConstruct
     public void init() {
@@ -131,16 +132,19 @@ public class BinanceService implements ExchangeService {
                         foundUserIds.put(Exchange.BINANCE, item.getAdvertiser().getUserNo());
                         Matcher wiseMatcher = wisePattern.matcher(item.getAdvertiser().getNickName());
                         AtomicBoolean isZinliFound = new AtomicBoolean(false);
+                        AtomicBoolean isAirTmFound = new AtomicBoolean(false);
                         item.getAdv().getTradeMethods().forEach(tradeMethod -> {
                            if ( tradeMethod.getPayType().equals(PaymentMethod.Zinli.name())) {
                                isZinliFound.set(true);
+                           } else if (tradeMethod.getPayType().equals(PaymentMethod.AirTM.name())) {
+                               isAirTmFound.set(true);
                            }
                         });
                         boolean isWiseFound = false;
                         if (wiseMatcher.find()) {
                             isWiseFound = true;
                         }
-                        else if (!isZinliFound.get()){
+                        else if (!isZinliFound.get() && !isAirTmFound.get()) {
                             String userDetails = binanceClient.getUserDetails(item.getAdv().getAdvNo());
                             try {
                                 JsonNode rootNode = objectMapper.readTree(userDetails);
@@ -159,6 +163,9 @@ public class BinanceService implements ExchangeService {
                         }
                         if (isZinliFound.get()) {
                             url = zinlSiren + url;
+                        }
+                        if (isAirTmFound.get()) {
+                            url = airtmSiren + url;
                         }
                         foundOrderUrls.put(url, item.getAdvertiser().getUserNo());
                     });
